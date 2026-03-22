@@ -1,0 +1,2965 @@
+<!DOCTYPE html>
+<html lang="th">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ระบบคำนวณโอที — TPN Khon Kaen</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link
+        href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@300;400;500;600;700&family=Sarabun:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
+        rel="stylesheet">
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.4/moment.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.4/locale/th.min.js"></script>
+    <script src='https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js'></script>
+    <script src="https://cdn.sheetjs.com/xlsx-0.20.0/package/dist/xlsx.full.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: { 'thai': ['"IBM Plex Sans Thai"', 'Sarabun', 'sans-serif'], 'mono': ['"JetBrains Mono"', 'monospace'] },
+                    colors: {
+                        dark: { 900: '#06080f', 800: '#0c1120', 700: '#111827', 600: '#1a2235', 500: '#243049' },
+                        accent: { 400: '#fbbf24', 500: '#f59e0b', 600: '#d97706' },
+                        glow: { blue: '#3b82f6', amber: '#f59e0b', emerald: '#10b981' }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        /* ═══════════════════════════════════════════════
+           MIDNIGHT FUEL — Dark Luxury Theme
+           ═══════════════════════════════════════════════ */
+        :root {
+            --bg-primary: #06080f;
+            --bg-card: rgba(17, 24, 39, 0.6);
+            --bg-card-solid: #111827;
+            --border-glass: rgba(255, 255, 255, 0.08);
+            --text-primary: #e2e8f0;
+            --text-secondary: #94a3b8;
+            --text-muted: #64748b;
+            --accent: #f59e0b;
+            --accent-glow: rgba(245, 158, 11, 0.3);
+            --blue: #3b82f6;
+            --emerald: #10b981;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'IBM Plex Sans Thai', 'Sarabun', sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* ── Animated Mesh Background ── */
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            z-index: -2;
+            background:
+                radial-gradient(ellipse 80% 60% at 10% 20%, rgba(59, 130, 246, 0.12) 0%, transparent 60%),
+                radial-gradient(ellipse 60% 80% at 85% 70%, rgba(245, 158, 11, 0.08) 0%, transparent 60%),
+                radial-gradient(ellipse 70% 50% at 50% 100%, rgba(16, 185, 129, 0.06) 0%, transparent 50%);
+            animation: meshMove 20s ease-in-out infinite alternate;
+        }
+
+        body::after {
+            content: '';
+            position: fixed;
+            inset: 0;
+            z-index: -1;
+            background:
+                radial-gradient(circle 600px at var(--mouse-x, 50%) var(--mouse-y, 50%), rgba(245, 158, 11, 0.03) 0%, transparent 100%);
+            pointer-events: none;
+        }
+
+        @keyframes meshMove {
+            0% {
+                transform: scale(1) translate(0, 0);
+            }
+
+            33% {
+                transform: scale(1.05) translate(-2%, 1%);
+            }
+
+            66% {
+                transform: scale(1.02) translate(1%, -1%);
+            }
+
+            100% {
+                transform: scale(1) translate(0, 0);
+            }
+        }
+
+        /* Floating particles */
+        .particles {
+            position: fixed;
+            inset: 0;
+            z-index: -1;
+            overflow: hidden;
+            pointer-events: none;
+        }
+
+        .particle {
+            position: absolute;
+            width: 3px;
+            height: 3px;
+            border-radius: 50%;
+            background: var(--accent);
+            opacity: 0;
+            animation: floatParticle linear infinite;
+        }
+
+        .particle:nth-child(1) {
+            left: 10%;
+            animation-duration: 18s;
+            animation-delay: 0s;
+        }
+
+        .particle:nth-child(2) {
+            left: 25%;
+            animation-duration: 22s;
+            animation-delay: 3s;
+        }
+
+        .particle:nth-child(3) {
+            left: 45%;
+            animation-duration: 20s;
+            animation-delay: 7s;
+        }
+
+        .particle:nth-child(4) {
+            left: 65%;
+            animation-duration: 25s;
+            animation-delay: 2s;
+        }
+
+        .particle:nth-child(5) {
+            left: 80%;
+            animation-duration: 19s;
+            animation-delay: 5s;
+        }
+
+        .particle:nth-child(6) {
+            left: 92%;
+            animation-duration: 23s;
+            animation-delay: 9s;
+        }
+
+        @keyframes floatParticle {
+            0% {
+                transform: translateY(100vh) scale(0);
+                opacity: 0;
+            }
+
+            10% {
+                opacity: 0.6;
+            }
+
+            90% {
+                opacity: 0.2;
+            }
+
+            100% {
+                transform: translateY(-10vh) scale(1.5);
+                opacity: 0;
+            }
+        }
+
+        /* ── Glass Cards ── */
+        .glass-card {
+            background: var(--bg-card);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--border-glass);
+            border-radius: 16px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            transition: all 0.3s ease;
+        }
+
+        .glass-card:hover {
+            border-color: rgba(255, 255, 255, 0.12);
+            box-shadow: 0 12px 48px rgba(0, 0, 0, 0.4);
+        }
+
+        /* ── Header ── */
+        .header-gradient {
+            background: linear-gradient(135deg, var(--accent) 0%, #fcd34d 50%, var(--accent) 100%);
+            background-size: 200% 100%;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            animation: shimmer 4s ease-in-out infinite;
+        }
+
+        @keyframes shimmer {
+
+            0%,
+            100% {
+                background-position: 0% 50%;
+            }
+
+            50% {
+                background-position: 100% 50%;
+            }
+        }
+
+        /* ── Buttons ── */
+        .btn-glow {
+            position: relative;
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .btn-glow::before {
+            content: '';
+            position: absolute;
+            inset: -2px;
+            border-radius: inherit;
+            background: linear-gradient(135deg, var(--accent), #fcd34d, var(--accent));
+            z-index: -1;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .btn-glow:hover::before {
+            opacity: 1;
+        }
+
+        .btn-glow:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 8px 24px var(--accent-glow);
+        }
+
+        .btn-glow:active {
+            transform: scale(0.97);
+        }
+
+        .btn-glass {
+            background: rgba(255, 255, 255, 0.06);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: var(--text-secondary);
+            transition: all 0.3s ease;
+        }
+
+        .btn-glass:hover {
+            background: rgba(255, 255, 255, 0.12);
+            color: var(--text-primary);
+            border-color: rgba(255, 255, 255, 0.2);
+        }
+
+        /* ── Inputs ── */
+        .input-dark {
+            background: rgba(0, 0, 0, 0.3) !important;
+            border: 1px solid rgba(255, 255, 255, 0.1) !important;
+            color: var(--text-primary) !important;
+            transition: all 0.3s ease !important;
+        }
+
+        .input-dark:focus {
+            border-color: var(--accent) !important;
+            box-shadow: 0 0 0 3px var(--accent-glow) !important;
+            outline: none !important;
+        }
+
+        .input-dark::placeholder {
+            color: var(--text-muted) !important;
+        }
+
+        select.input-dark option {
+            background: var(--bg-card-solid);
+            color: var(--text-primary);
+        }
+
+        /* ── Tabs ── */
+        .tab-btn {
+            transition: all 0.3s ease;
+            border: none !important;
+            border-bottom: none !important;
+        }
+
+        .tab-btn.active {
+            background: linear-gradient(135deg, rgba(245, 158, 11, 0.15), rgba(245, 158, 11, 0.05)) !important;
+            color: var(--accent) !important;
+            border: 1px solid rgba(245, 158, 11, 0.3) !important;
+            border-radius: 12px !important;
+            font-weight: bold;
+            box-shadow: 0 0 20px rgba(245, 158, 11, 0.1);
+        }
+
+        .tab-btn:not(.active) {
+            color: var(--text-muted) !important;
+            border-radius: 12px !important;
+        }
+
+        .tab-btn:not(.active):hover {
+            color: var(--text-secondary) !important;
+            background: rgba(255, 255, 255, 0.03);
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        /* ── Main Table ── */
+        #mainTable thead {
+            background: #0f172a !important;
+            border-bottom: 2px solid rgba(20, 184, 166, 0.3);
+        }
+
+        #mainTable thead th {
+            color: inherit;
+            font-weight: 700;
+            letter-spacing: 0.06em;
+            border-bottom: none;
+            background: transparent !important;
+        }
+
+        #mainTable tbody tr {
+            border-bottom: 1px solid rgba(255, 255, 255, 0.04) !important;
+            transition: all 0.2s ease;
+            background: transparent;
+        }
+
+        #mainTable tbody tr:nth-child(even) {
+            background: rgba(255, 255, 255, 0.02);
+        }
+
+        #mainTable tbody tr:hover {
+            background: rgba(245, 158, 11, 0.05) !important;
+        }
+
+        #mainTable td {
+            color: var(--text-primary);
+        }
+
+        #mainTable input[type="time"] {
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            color: var(--text-primary);
+            border-radius: 8px;
+            transition: all 0.2s;
+        }
+
+        #mainTable input[type="time"]:focus {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 2px var(--accent-glow);
+            outline: none;
+        }
+
+        #mainTable input[type="checkbox"] {
+            accent-color: var(--accent);
+        }
+
+        .new-data {
+            animation: pulseGold 2s infinite;
+        }
+
+        @keyframes pulseGold {
+
+            0%,
+            100% {
+                background-color: rgba(245, 158, 11, 0.08);
+            }
+
+            50% {
+                background-color: rgba(245, 158, 11, 0.18);
+            }
+        }
+
+        /* ── Summary Cards ── */
+        .summary-card {
+            position: relative;
+            overflow: hidden;
+            border-radius: 16px;
+        }
+
+        .summary-card::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            border-radius: inherit;
+            padding: 2px;
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.2), transparent, rgba(255, 255, 255, 0.1));
+            -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+            mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+            -webkit-mask-composite: xor;
+            mask-composite: exclude;
+        }
+
+        .summary-card .value {
+            font-size: 3rem;
+            font-weight: 700;
+            line-height: 1;
+            text-shadow: 0 0 40px currentColor;
+        }
+
+        /* ── Toast ── */
+        #toast {
+            visibility: hidden;
+            min-width: 280px;
+            background: linear-gradient(135deg, #1a2235, #243049);
+            color: var(--accent);
+            text-align: center;
+            border-radius: 14px;
+            padding: 16px 24px;
+            position: fixed;
+            z-index: 10000;
+            left: 50%;
+            bottom: 30px;
+            transform: translateX(-50%);
+            font-size: 14px;
+            font-weight: 600;
+            opacity: 0;
+            border: 1px solid rgba(245, 158, 11, 0.2);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5), 0 0 20px rgba(245, 158, 11, 0.1);
+            transition: opacity 0.4s ease, bottom 0.4s ease;
+        }
+
+        #toast.show {
+            visibility: visible;
+            opacity: 1;
+            bottom: 50px;
+        }
+
+        /* ── Loading Overlay ── */
+        #loadingOverlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(6, 8, 15, 0.97);
+            backdrop-filter: blur(10px);
+            z-index: 9999;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            color: white;
+        }
+
+        /* ── Debug Log ── */
+        .debug-panel {
+            background: rgba(0, 0, 0, 0.5) !important;
+            border: 1px solid rgba(255, 255, 255, 0.06) !important;
+            font-family: 'JetBrains Mono', monospace !important;
+            color: var(--accent) !important;
+        }
+
+        /* ── Textarea ── */
+        textarea.input-dark {
+            font-family: 'JetBrains Mono', monospace !important;
+            font-size: 12px !important;
+        }
+
+        /* ── Scroll-to-top ── */
+        #scrollTop {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--accent), #d97706);
+            color: #000;
+            border: none;
+            font-size: 18px;
+            cursor: pointer;
+            opacity: 0;
+            transform: translateY(16px);
+            transition: all 0.3s ease;
+            z-index: 100;
+            box-shadow: 0 4px 20px var(--accent-glow);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        #scrollTop.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        #scrollTop:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 30px var(--accent-glow);
+        }
+
+        /* ── 3D Spinning Cube (Uiverse bociKond) ── */
+        .cube-spinner {
+            width: 28px;
+            height: 28px;
+            --clr: rgb(94, 234, 212);
+            --clr-alpha: rgba(94, 234, 212, 0.1);
+            animation: cubeSpinner 1.6s infinite ease;
+            transform-style: preserve-3d;
+            flex-shrink: 0;
+        }
+
+        .cube-spinner>div {
+            background-color: var(--clr-alpha);
+            height: 100%;
+            position: absolute;
+            width: 100%;
+            border: 2px solid var(--clr);
+        }
+
+        .cube-spinner div:nth-of-type(1) {
+            transform: translateZ(-14px) rotateY(180deg);
+        }
+
+        .cube-spinner div:nth-of-type(2) {
+            transform: rotateY(-270deg) translateX(50%);
+            transform-origin: top right;
+        }
+
+        .cube-spinner div:nth-of-type(3) {
+            transform: rotateY(270deg) translateX(-50%);
+            transform-origin: center left;
+        }
+
+        .cube-spinner div:nth-of-type(4) {
+            transform: rotateX(90deg) translateY(-50%);
+            transform-origin: top center;
+        }
+
+        .cube-spinner div:nth-of-type(5) {
+            transform: rotateX(-90deg) translateY(50%);
+            transform-origin: bottom center;
+        }
+
+        .cube-spinner div:nth-of-type(6) {
+            transform: translateZ(14px);
+        }
+
+        @keyframes cubeSpinner {
+            0% {
+                transform: rotate(45deg) rotateX(-25deg) rotateY(25deg);
+            }
+
+            50% {
+                transform: rotate(45deg) rotateX(-385deg) rotateY(25deg);
+            }
+
+            100% {
+                transform: rotate(45deg) rotateX(-385deg) rotateY(385deg);
+            }
+        }
+
+        /* ── Title Shimmer Text ── */
+        .title-shimmer {
+            background: linear-gradient(90deg,
+                    #5eead4 0%,
+                    #a7f3d0 20%,
+                    #ffffff 40%,
+                    #a7f3d0 60%,
+                    #5eead4 80%,
+                    #2dd4bf 100%);
+            background-size: 200% auto;
+            background-clip: text;
+            -webkit-background-clip: text;
+            color: transparent;
+            animation: shimmerText 3s linear infinite;
+        }
+
+        @keyframes shimmerText {
+            0% {
+                background-position: 200% center;
+            }
+
+            100% {
+                background-position: -200% center;
+            }
+        }
+
+        /* ── Star Gold Button (Uiverse DrashtySoni) ── */
+        .btn-star {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+            height: 2.8rem;
+            padding: 0 1.5rem;
+            background-size: 300% 300%;
+            backdrop-filter: blur(1rem);
+            border-radius: 5rem;
+            transition: 0.5s;
+            animation: btnStarGrad 5s ease infinite;
+            border: double 3px transparent;
+            background-image: linear-gradient(#212121, #212121),
+                linear-gradient(137.48deg, #ffdb3b 10%, #ff9b17d7 45%, #f9ff41 67%, #feb200d7 87%);
+            background-origin: border-box;
+            background-clip: content-box, border-box;
+            cursor: pointer;
+            position: relative;
+            gap: 8px;
+        }
+
+        .btn-star strong {
+            z-index: 2;
+            font-size: 13px;
+            letter-spacing: 2px;
+            color: #fff;
+            text-shadow: 0 0 4px rgba(0, 0, 0, 0.5);
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+
+        .btn-star i {
+            z-index: 2;
+            color: #ffdb3b;
+            font-size: 14px;
+        }
+
+        .btn-star .container-stars {
+            position: absolute;
+            z-index: -1;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            transition: 0.5s;
+            backdrop-filter: blur(1rem);
+            border-radius: 5rem;
+        }
+
+        .btn-star .stars-field {
+            position: relative;
+            background: transparent;
+            width: 200rem;
+            height: 200rem;
+        }
+
+        .btn-star .stars-field::after {
+            content: "";
+            position: absolute;
+            top: -10rem;
+            left: -100rem;
+            width: 100%;
+            height: 100%;
+            animation: animStarRotate 90s linear infinite;
+            background-image: radial-gradient(#ffffff 1px, transparent 1%);
+            background-size: 50px 50px;
+        }
+
+        .btn-star .stars-field::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: -50%;
+            width: 170%;
+            height: 500%;
+            animation: animStarScroll 60s linear infinite;
+            background-image: radial-gradient(#ffffff 1px, transparent 1%);
+            background-size: 50px 50px;
+            opacity: 0.5;
+        }
+
+        .btn-star .glow-wrap {
+            position: absolute;
+            display: flex;
+            width: 10rem;
+            z-index: 0;
+        }
+
+        .btn-star .circle {
+            width: 100%;
+            height: 24px;
+            filter: blur(1.5rem);
+            animation: pulseGlow 4s infinite;
+            z-index: -1;
+            background: rgba(255, 219, 59, 0.7);
+        }
+
+        .btn-star:hover .container-stars {
+            z-index: 1;
+            background-color: #212121;
+        }
+
+        .btn-star:hover {
+            transform: scale(1.08);
+        }
+
+        .btn-star:active {
+            border: double 3px #FE53BB;
+            animation: none;
+            transform: scale(1);
+        }
+
+        .btn-star:active .circle {
+            background: #FE53BB;
+        }
+
+        @keyframes btnStarGrad {
+            0% {
+                background-position: 0% 50%;
+            }
+
+            50% {
+                background-position: 100% 50%;
+            }
+
+            100% {
+                background-position: 0% 50%;
+            }
+        }
+
+        @keyframes animStarRotate {
+            from {
+                transform: rotate(360deg);
+            }
+
+            to {
+                transform: rotate(0);
+            }
+        }
+
+        @keyframes animStarScroll {
+            from {
+                transform: translateY(0);
+            }
+
+            to {
+                transform: translateY(-135rem);
+            }
+        }
+
+        @keyframes pulseGlow {
+            0% {
+                transform: scale(0.75);
+                box-shadow: 0 0 0 0 rgba(255, 219, 59, 0.5);
+            }
+
+            70% {
+                transform: scale(1);
+                box-shadow: 0 0 0 10px rgba(255, 219, 59, 0);
+            }
+
+            100% {
+                transform: scale(0.75);
+                box-shadow: 0 0 0 0 rgba(255, 219, 59, 0);
+            }
+        }
+
+        /* ── Red Orbit Button (Uiverse rubyreapergaming) ── */
+        .btn-red-orbit {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+            height: 2.8rem;
+            padding: 0 1.4rem;
+            background-size: 300% 300%;
+            backdrop-filter: blur(1rem);
+            border-radius: 5rem;
+            transition: 0.5s;
+            animation: btnRedGrad 5s ease infinite;
+            border: double 3px transparent;
+            background-image: linear-gradient(#161a25, #161a25),
+                linear-gradient(137.48deg, #f5434f 10%, #631e29 45%, #000 67%, #161a25 87%);
+            background-origin: border-box;
+            background-clip: content-box, border-box;
+            cursor: pointer;
+            position: relative;
+            gap: 8px;
+        }
+
+        .btn-red-orbit strong {
+            z-index: 2;
+            font-size: 12px;
+            letter-spacing: 3px;
+            color: #fff;
+            text-shadow: 0 0 4px white;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+
+        .btn-red-orbit i {
+            z-index: 2;
+            color: #f5434f;
+            font-size: 14px;
+        }
+
+        .btn-red-orbit .container-stars {
+            position: absolute;
+            z-index: -1;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            transition: 0.5s;
+            backdrop-filter: blur(1rem);
+            border-radius: 5rem;
+        }
+
+        .btn-red-orbit .stars-field {
+            position: relative;
+            background: transparent;
+            width: 200rem;
+            height: 200rem;
+        }
+
+        .btn-red-orbit .stars-field::after {
+            content: "";
+            position: absolute;
+            top: -10rem;
+            left: -100rem;
+            width: 100%;
+            height: 100%;
+            animation: animStarRotate 90s linear infinite;
+            background-image: radial-gradient(#ffffff 1px, transparent 1%);
+            background-size: 50px 50px;
+        }
+
+        .btn-red-orbit .stars-field::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: -50%;
+            width: 170%;
+            height: 500%;
+            animation: animStarScroll 60s linear infinite;
+            background-image: radial-gradient(#ffffff 1px, transparent 1%);
+            background-size: 50px 50px;
+            opacity: 0.5;
+        }
+
+        .btn-red-orbit .orbit-wrap {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+        }
+
+        .btn-red-orbit .orbit-circle {
+            position: absolute;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            filter: blur(1.5rem);
+        }
+
+        .btn-red-orbit .orbit-circle:nth-of-type(1) {
+            background: rgba(245, 67, 79, 0.7);
+            animation: orbitSpin 8s linear infinite;
+        }
+
+        .btn-red-orbit .orbit-circle:nth-of-type(2) {
+            background: rgba(99, 30, 41, 0.8);
+            animation: orbitSpin 10s linear infinite reverse;
+        }
+
+        .btn-red-orbit:hover .container-stars {
+            z-index: 1;
+            background-color: #161a25;
+        }
+
+        .btn-red-orbit:hover {
+            transform: scale(1.08);
+        }
+
+        .btn-red-orbit:active {
+            border: double 3px #631e29;
+            animation: none;
+            transform: scale(1);
+        }
+
+        .btn-red-orbit:active .orbit-circle {
+            background: #631e29;
+        }
+
+        @keyframes btnRedGrad {
+            0% {
+                background-position: 0% 50%;
+            }
+
+            50% {
+                background-position: 100% 50%;
+            }
+
+            100% {
+                background-position: 0% 50%;
+            }
+        }
+
+        @keyframes orbitSpin {
+            from {
+                transform: rotate(0deg) translateX(50px) rotate(0deg);
+            }
+
+            to {
+                transform: rotate(360deg) translateX(50px) rotate(-360deg);
+            }
+        }
+
+        /* ── Rainbow Tab Button (Uiverse StealthWorm) ── */
+        .btn-tab-rainbow {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+            height: 2.6rem;
+            padding: 0 1.2rem;
+            background-size: 300% 300%;
+            cursor: pointer;
+            backdrop-filter: blur(1rem);
+            border-radius: 5rem;
+            transition: 0.5s;
+            animation: btnRainbowGrad 5s ease infinite;
+            border: double 3px transparent;
+            background-image: linear-gradient(#212121, #212121),
+                linear-gradient(137.48deg, #ffdb3b 10%, #fe53bb 45%, #8f51ea 67%, #0044ff 87%);
+            background-origin: border-box;
+            background-clip: content-box, border-box;
+            position: relative;
+            gap: 8px;
+            flex: 1;
+        }
+
+        .btn-tab-rainbow strong {
+            z-index: 2;
+            font-size: 12px;
+            letter-spacing: 2px;
+            color: #fff;
+            text-shadow: 0 0 4px white;
+            font-weight: 600;
+        }
+
+        .btn-tab-rainbow i {
+            z-index: 2;
+            color: #fe53bb;
+            font-size: 13px;
+        }
+
+        .btn-tab-rainbow .container-stars {
+            position: absolute;
+            z-index: -1;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            transition: 0.5s;
+            backdrop-filter: blur(1rem);
+            border-radius: 5rem;
+        }
+
+        .btn-tab-rainbow .stars-field {
+            position: relative;
+            background: transparent;
+            width: 200rem;
+            height: 200rem;
+        }
+
+        .btn-tab-rainbow .stars-field::after {
+            content: "";
+            position: absolute;
+            top: -10rem;
+            left: -100rem;
+            width: 100%;
+            height: 100%;
+            animation: animStarRotate 90s linear infinite;
+            background-image: radial-gradient(#ffffff 1px, transparent 1%);
+            background-size: 50px 50px;
+        }
+
+        .btn-tab-rainbow .stars-field::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: -50%;
+            width: 170%;
+            height: 500%;
+            animation: animStarScroll 60s linear infinite;
+            background-image: radial-gradient(#ffffff 1px, transparent 1%);
+            background-size: 50px 50px;
+            opacity: 0.5;
+        }
+
+        .btn-tab-rainbow .glow-wrap {
+            position: absolute;
+            display: flex;
+            width: 10rem;
+            z-index: 0;
+        }
+
+        .btn-tab-rainbow .circle {
+            width: 100%;
+            height: 24px;
+            filter: blur(1.5rem);
+            animation: pulseRainbow 4s infinite;
+            z-index: -1;
+        }
+
+        .btn-tab-rainbow .circle:nth-of-type(1) {
+            background: rgba(254, 83, 186, 0.6);
+        }
+
+        .btn-tab-rainbow .circle:nth-of-type(2) {
+            background: rgba(142, 81, 234, 0.7);
+        }
+
+        .btn-tab-rainbow:hover .container-stars {
+            z-index: 1;
+            background-color: #212121;
+        }
+
+        .btn-tab-rainbow:hover {
+            transform: scale(1.05);
+        }
+
+        .btn-tab-rainbow:active {
+            border: double 3px #fe53bb;
+            animation: none;
+            transform: scale(1);
+        }
+
+        .btn-tab-rainbow:active .circle {
+            background: #fe53bb;
+        }
+
+        .btn-tab-rainbow.active {
+            border: double 3px rgba(254, 83, 186, 0.6);
+            box-shadow: 0 0 20px rgba(254, 83, 186, 0.2);
+        }
+
+        @keyframes btnRainbowGrad {
+            0% {
+                background-position: 0% 50%;
+            }
+
+            50% {
+                background-position: 100% 50%;
+            }
+
+            100% {
+                background-position: 0% 50%;
+            }
+        }
+
+        @keyframes pulseRainbow {
+            0% {
+                transform: scale(0.75);
+                box-shadow: 0 0 0 0 rgba(254, 83, 186, 0.5);
+            }
+
+            70% {
+                transform: scale(1);
+                box-shadow: 0 0 0 10px rgba(254, 83, 186, 0);
+            }
+
+            100% {
+                transform: scale(0.75);
+                box-shadow: 0 0 0 0 rgba(254, 83, 186, 0);
+            }
+        }
+
+        /* ── Gold Star Button (Uiverse-inspired) ── */
+        .btn-gold {
+            position: relative;
+            padding: 10px 22px;
+            background: #ffdc00;
+            font-weight: 800;
+            color: #52288e;
+            border: none;
+            border-radius: 2rem;
+            box-shadow: 0 0 0 #ffef8c80;
+            transition: all 0.3s ease-in-out;
+            cursor: pointer;
+            overflow: visible;
+            z-index: 1;
+        }
+
+        .btn-gold:hover {
+            background: #d6b900;
+            box-shadow: 0 0 30px #ffef8c80;
+            transform: translateY(-2px);
+        }
+
+        .btn-gold:active {
+            transform: scale(0.95);
+        }
+
+        .btn-gold .star {
+            position: absolute;
+            width: 12px;
+            height: 12px;
+            background: #fffdef;
+            clip-path: polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%);
+            z-index: -1;
+            opacity: 0;
+            transition: all 0s;
+        }
+
+        .btn-gold:hover .star {
+            opacity: 1;
+            filter: drop-shadow(0 0 6px #fffdef);
+        }
+
+        .btn-gold:hover .star-1 {
+            top: -60%;
+            left: -15%;
+            width: 18px;
+            height: 18px;
+            transform: rotate(15deg);
+            transition: all 0.8s cubic-bezier(0, 0.4, 0, 1.01);
+            opacity: 1;
+        }
+
+        .btn-gold:hover .star-2 {
+            top: -35%;
+            left: 80%;
+            width: 10px;
+            height: 10px;
+            transform: rotate(-20deg);
+            transition: all 0.6s cubic-bezier(0, 0.4, 0, 1.01);
+            opacity: 1;
+        }
+
+        .btn-gold:hover .star-3 {
+            top: 70%;
+            left: 90%;
+            width: 7px;
+            height: 7px;
+            transform: rotate(50deg);
+            transition: all 1s cubic-bezier(0, 0.4, 0, 1.01);
+            opacity: 1;
+        }
+
+        .btn-gold:hover .star-4 {
+            top: 80%;
+            left: -10%;
+            width: 14px;
+            height: 14px;
+            transform: rotate(-15deg);
+            transition: all 0.7s cubic-bezier(0, 0.4, 0, 1.01);
+            opacity: 1;
+        }
+
+        .btn-gold:hover .star-1,
+        .btn-gold:hover .star-2,
+        .btn-gold:hover .star-3,
+        .btn-gold:hover .star-4 {
+            animation: starFade 1.5s ease forwards 0.8s;
+        }
+
+        @keyframes starFade {
+            to {
+                opacity: 0;
+            }
+        }
+
+        /* ── Sparkle Dark Button (Uiverse-inspired) ── */
+        .btn-spark {
+            --border_radius: 0.75rem;
+            --transtion: 0.3s ease-in-out;
+            cursor: pointer;
+            position: relative;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            transform-origin: center;
+            padding: 0.7rem 1.4rem;
+            background-color: transparent;
+            border: none;
+            border-radius: var(--border_radius);
+            transform: scale(calc(1 + (var(--active, 0) * 0.05)));
+            transition: transform var(--transtion);
+            color: white;
+        }
+
+        .btn-spark::before {
+            content: "";
+            position: absolute;
+            inset: 0;
+            background-color: hsla(0, 0%, 12%, 1);
+            border-radius: var(--border_radius);
+            box-shadow: inset 0 0.5px hsl(0, 0%, 100%),
+                inset 0 -1px 2px 0 hsl(0, 0%, 0%),
+                0px 4px 10px -4px hsla(0, 0%, 0%, calc(1 - var(--active, 0))),
+                0 0 0 calc(var(--active, 0) * 0.35rem) hsla(260, 97%, 50%, 0.65);
+            transition: all var(--transtion);
+            z-index: 0;
+        }
+
+        .btn-spark::after {
+            content: "";
+            position: absolute;
+            inset: 0;
+            background-color: hsla(260, 97%, 61%, 0.75);
+            background-image:
+                radial-gradient(at 51% 89%, hsla(266, 45%, 74%, 1) 0px, transparent 50%),
+                radial-gradient(at 100% 100%, hsla(266, 36%, 60%, 1) 0px, transparent 50%),
+                radial-gradient(at 22% 91%, hsla(266, 36%, 60%, 1) 0px, transparent 50%);
+            background-position: top;
+            opacity: var(--active, 0);
+            border-radius: var(--border_radius);
+            transition: opacity var(--transtion);
+            z-index: 2;
+        }
+
+        .btn-spark:is(:hover, :focus-visible) {
+            --active: 1;
+        }
+
+        .btn-spark:active {
+            transform: scale(1);
+        }
+
+        .btn-spark:disabled {
+            opacity: 0.5;
+            pointer-events: none;
+        }
+
+        .btn-spark .dots_border {
+            overflow: hidden;
+            position: absolute;
+            inset: -1px;
+            background-color: transparent;
+            border-radius: var(--border_radius);
+            z-index: -10;
+        }
+
+        .btn-spark .dots_border::before {
+            content: "";
+            position: absolute;
+            top: 30%;
+            left: 50%;
+            transform-origin: left;
+            width: 100%;
+            height: 2rem;
+            background-color: white;
+            mask: linear-gradient(transparent 0%, white 120%);
+            animation: rotateDots 2s linear infinite;
+        }
+
+        @keyframes rotateDots {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        .btn-spark .sparkle-icon {
+            position: relative;
+            z-index: 10;
+            width: 1.2rem;
+            height: 1.2rem;
+            color: white;
+        }
+
+        .btn-spark:is(:hover, :focus) .sparkle-icon {
+            animation: sparkPulse 1.5s linear 0.5s infinite;
+        }
+
+        @keyframes sparkPulse {
+
+            0%,
+            34%,
+            71%,
+            100% {
+                transform: scale(1);
+            }
+
+            17% {
+                transform: scale(1.3);
+            }
+
+            49% {
+                transform: scale(1.2);
+            }
+
+            83% {
+                transform: scale(1.25);
+            }
+        }
+
+        .btn-spark .text_button {
+            position: relative;
+            z-index: 10;
+            background-image: linear-gradient(90deg,
+                    hsla(0, 0%, 100%, 1) 0%,
+                    hsla(0, 0%, 100%, var(--active, 0)) 120%);
+            background-clip: text;
+            -webkit-background-clip: text;
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: transparent;
+        }
+
+        /* ── Animated Glow Border (OT Table) ── */
+        .glow-border-wrap {
+            position: relative;
+            border-radius: 16px;
+            overflow: hidden;
+            padding: 2px;
+        }
+
+        .glow-border-wrap::before {
+            content: "";
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 200%;
+            height: 200%;
+            transform: translate(-50%, -50%) rotate(0deg);
+            background: conic-gradient(rgba(0, 0, 0, 0),
+                    #7a5af8 5%,
+                    rgba(0, 0, 0, 0) 14%,
+                    rgba(0, 0, 0, 0) 50%,
+                    #f59e0b 60%,
+                    rgba(0, 0, 0, 0) 64%);
+            animation: rotateBorder 6s linear infinite;
+            z-index: 0;
+        }
+
+        .glow-border-wrap::after {
+            content: "";
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 200%;
+            height: 200%;
+            transform: translate(-50%, -50%) rotate(0deg);
+            background: conic-gradient(rgba(0, 0, 0, 0),
+                    rgba(122, 90, 248, 0.3) 5%,
+                    rgba(0, 0, 0, 0) 14%,
+                    rgba(0, 0, 0, 0) 50%,
+                    rgba(245, 158, 11, 0.3) 60%,
+                    rgba(0, 0, 0, 0) 64%);
+            filter: blur(25px);
+            opacity: 0.5;
+            animation: rotateBorder 6s linear infinite;
+            z-index: 0;
+        }
+
+        .glow-border-inner {
+            position: relative;
+            z-index: 1;
+            background: var(--bg-card-solid);
+            border-radius: 14px;
+            overflow: hidden;
+        }
+
+        @keyframes rotateBorder {
+            100% {
+                transform: translate(-50%, -50%) rotate(360deg);
+            }
+        }
+
+        /* ── Neumorphism Input Card ── */
+        .neu-card {
+            background: #e0e0e0;
+            border-radius: 24px;
+            box-shadow: 12px 12px 24px #bebebe, -12px -12px 24px #ffffff;
+            border: none;
+            color: #333;
+        }
+
+        .neu-card:hover {
+            box-shadow: 14px 14px 28px #b0b0b0, -14px -14px 28px #ffffff;
+        }
+
+        .neu-card label,
+        .neu-card h3,
+        .neu-card .text-sm,
+        .neu-card p {
+            color: #444 !important;
+        }
+
+        .neu-card h3 i {
+            color: #d97706 !important;
+        }
+
+        .neu-input {
+            background: #e0e0e0 !important;
+            border: none !important;
+            border-radius: 14px !important;
+            box-shadow: inset 5px 5px 10px #bebebe, inset -5px -5px 10px #ffffff !important;
+            color: #333 !important;
+            transition: all 0.3s ease !important;
+        }
+
+        .neu-input:focus {
+            box-shadow: inset 3px 3px 6px #b0b0b0, inset -3px -3px 6px #ffffff, 0 0 0 3px rgba(245, 158, 11, 0.3) !important;
+            outline: none !important;
+        }
+
+        .neu-input::placeholder {
+            color: #999 !important;
+        }
+
+        select.neu-input option {
+            background: #e0e0e0;
+            color: #333;
+        }
+
+        .neu-card .tab-btn {
+            color: #666 !important;
+        }
+
+        .neu-card .tab-btn.active {
+            background: linear-gradient(135deg, rgba(245, 158, 11, 0.15), rgba(245, 158, 11, 0.08)) !important;
+            color: #b45309 !important;
+            border: 1px solid rgba(217, 119, 6, 0.3) !important;
+            box-shadow: 4px 4px 8px #bebebe, -4px -4px 8px #ffffff, 0 0 15px rgba(245, 158, 11, 0.08) !important;
+        }
+
+        .neu-card .tab-btn:not(.active):hover {
+            color: #555 !important;
+            background: rgba(0, 0, 0, 0.03) !important;
+        }
+
+        .neu-card .debug-panel {
+            background: rgba(30, 30, 30, 0.9) !important;
+            border: 1px solid rgba(255, 255, 255, 0.08) !important;
+            color: #f59e0b !important;
+        }
+
+        .neu-card .border-dashed {
+            border-color: #bbb !important;
+        }
+
+        .neu-card .border-dashed:hover {
+            border-color: #d97706 !important;
+            background: rgba(245, 158, 11, 0.05) !important;
+        }
+
+        .neu-card .border-dashed i,
+        .neu-card .border-dashed p {
+            color: #888 !important;
+        }
+
+        .neu-card .border-dashed:hover i,
+        .neu-card .border-dashed:hover p {
+            color: #b45309 !important;
+        }
+
+        /* ── Animations ── */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .animate-in {
+            animation: fadeInUp 0.6s ease-out both;
+        }
+
+        .delay-1 {
+            animation-delay: 0.1s;
+        }
+
+        .delay-2 {
+            animation-delay: 0.2s;
+        }
+
+        .delay-3 {
+            animation-delay: 0.3s;
+        }
+
+        .delay-4 {
+            animation-delay: 0.4s;
+        }
+
+        /* ── Footer ── */
+        .site-footer {
+            text-align: center;
+            padding: 24px;
+            color: var(--text-muted);
+            font-size: 12px;
+            border-top: 1px solid rgba(255, 255, 255, 0.04);
+        }
+
+        .site-footer .ver {
+            color: var(--accent);
+            font-weight: 600;
+        }
+
+        /* ══════════════════════════════════════════
+           A4 Paper & Print — UNTOUCHED ZONE
+           ══════════════════════════════════════════ */
+        .a4-paper {
+            background: white;
+            width: 210mm;
+            min-height: 297mm;
+            margin: 20px auto;
+            padding: 10mm 15mm;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            position: relative;
+            color: black;
+            font-family: 'Sarabun', sans-serif;
+            box-sizing: border-box;
+        }
+
+        .form-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 10pt;
+            table-layout: fixed;
+        }
+
+        .form-table th,
+        .form-table td {
+            border: 1px solid black;
+            padding: 4px;
+            line-height: 1.2;
+            vertical-align: middle;
+            word-wrap: break-word;
+            white-space: normal;
+        }
+
+        .form-table th {
+            text-align: center;
+            font-weight: bold;
+            background-color: #f3f4f6 !important;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+        }
+
+        @media print {
+            @page {
+                size: A4 portrait;
+                margin: 0;
+            }
+
+            body * {
+                visibility: hidden;
+            }
+
+            body {
+                background-color: white;
+            }
+
+            #formModal,
+            #formModal * {
+                visibility: visible;
+            }
+
+            #formModal {
+                position: absolute;
+                left: 0;
+                top: 0;
+                width: 100%;
+                height: auto;
+                background: white;
+                z-index: 99999;
+                overflow: visible;
+            }
+
+            .no-print {
+                display: none !important;
+            }
+
+            .a4-paper {
+                box-shadow: none;
+                margin: 0;
+                width: 210mm;
+                min-height: 297mm;
+                padding: 15mm;
+                transform: none;
+            }
+
+            body::before,
+            body::after,
+            .particles {
+                display: none !important;
+            }
+
+            #scrollTop {
+                display: none !important;
+            }
+        }
+    </style>
+</head>
+
+<body class="text-slate-200">
+
+    <!-- Floating Particles -->
+    <div class="particles">
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+    </div>
+
+    <!-- Scroll to Top -->
+    <button id="scrollTop" onclick="window.scrollTo({top:0,behavior:'smooth'})">
+        <i class="fas fa-chevron-up"></i>
+    </button>
+
+    <div id="loadingOverlay">
+        <div class="animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-amber-400 mb-4"></div>
+        <h2 class="text-2xl font-bold text-white">กำลังประมวลผล...</h2>
+        <p class="text-slate-400 mt-2 text-sm" id="loadingStatus">Processing...</p>
+    </div>
+
+    <div id="toast"><i class="fas fa-check-circle mr-2"></i>อัปเดตตารางเรียบร้อย</div>
+
+    <div class="container mx-auto px-4 py-8 max-w-5xl">
+
+        <!-- ═══ HEADER ═══ -->
+        <header class="relative flex justify-between items-center mb-8 sticky top-0 z-10 py-3 px-5
+                       bg-slate-900 border-2 border-teal-600 rounded-2xl overflow-hidden
+                       transform transition-all duration-500 hover:border-emerald-400
+                       before:absolute before:w-10 before:h-10 before:right-2 before:top-2 before:z-0 before:bg-indigo-500 before:rounded-full before:blur-lg before:transition-all before:duration-500
+                       after:absolute after:z-0 after:w-14 after:h-14 after:bg-teal-400 after:right-6 after:top-3 after:rounded-full after:blur-lg after:transition-all after:duration-500
+                       hover:before:right-10 hover:before:-bottom-4 hover:before:blur hover:after:-right-6 hover:after:scale-110
+                       animate-in">
+            <div class="relative z-10">
+                <h1 class="text-2xl font-bold flex items-center gap-3">
+                    <span class="cube-spinner">
+                        <div></div>
+                        <div></div>
+                        <div></div>
+                        <div></div>
+                        <div></div>
+                        <div></div>
+                    </span>
+                    <span class="title-shimmer">ระบบคำนวณโอที</span>
+                </h1>
+                <p class="text-xs text-teal-600 mt-1 font-mono">TPN Khon Kaen — V.72</p>
+            </div>
+            <div class="relative z-10 flex gap-3">
+                <button onclick="window.location.reload()" class="btn-spark px-4 py-2 rounded-xl text-sm">
+                    <div class="dots_border"></div>
+                    <i class="fas fa-sync sparkle-icon"></i>
+                    <span class="text_button">รีเซ็ต</span>
+                </button>
+                <button onclick="openFormModal()" class="btn-star">
+                    <div class="container-stars">
+                        <div class="stars-field"></div>
+                    </div>
+                    <div class="glow-wrap">
+                        <div class="circle"></div>
+                        <div class="circle"></div>
+                    </div>
+                    <i class="fas fa-file-invoice"></i>
+                    <strong>สร้างใบเบิก</strong>
+                </button>
+            </div>
+        </header>
+
+        <!-- ═══ SETTINGS + INPUT ═══ -->
+        <div
+            class="relative bg-slate-900 border-2 border-teal-600 rounded-2xl overflow-hidden p-6 mb-6 animate-in delay-1
+                    transform transition-all duration-500 hover:border-emerald-400
+                    before:absolute before:w-12 before:h-12 before:right-3 before:top-3 before:z-0 before:bg-indigo-500 before:rounded-full before:blur-lg before:transition-all before:duration-500
+                    after:absolute after:z-0 after:w-16 after:h-16 after:bg-teal-400 after:right-8 after:top-5 after:rounded-full after:blur-lg after:transition-all after:duration-500
+                    hover:before:right-12 hover:before:-bottom-4 hover:before:blur hover:after:-right-6 hover:after:scale-110">
+
+            <!-- Month & Shift Settings -->
+            <div class="relative z-10 mb-6 p-4 rounded-xl border border-teal-500/20 bg-teal-500/5">
+                <h3 class="text-sm font-bold text-teal-300 mb-3 flex items-center gap-2">
+                    <i class="fas fa-calendar-alt"></i>
+                    ตั้งค่าเดือนและกะเริ่มต้น
+                </h3>
+                <div class="flex gap-4 flex-wrap items-end">
+                    <div class="flex-1 min-w-[200px]">
+                        <label class="block text-xs text-slate-400 font-bold mb-1">เลือกเดือนที่ต้องการคำนวณ</label>
+                        <input type="month" id="targetMonth" value="2026-01"
+                            class="w-full bg-slate-800 border border-slate-600 text-slate-200 rounded-xl px-3 py-2.5 text-sm focus:ring-2 focus:ring-teal-500 focus:border-teal-500 outline-none transition-all">
+                    </div>
+                    <div class="flex-1 min-w-[200px]">
+                        <label class="block text-xs text-slate-400 font-bold mb-1">วันที่ 1 ของเดือนนี้
+                            เป็นกะอะไร?</label>
+                        <select id="refShift"
+                            class="w-full bg-slate-800 border border-slate-600 text-slate-200 rounded-xl px-3 py-2.5 text-sm focus:ring-2 focus:ring-teal-500 focus:border-teal-500 outline-none transition-all">
+                            <option value="0">เช้า 1 (M1)</option>
+                            <option value="1">เช้า 2 (M2)</option>
+                            <option value="2">เช้า 3 (M3)</option>
+                            <option value="3" selected>บ่าย 1 (A1)</option>
+                            <option value="4">บ่าย 2 (A2)</option>
+                            <option value="5">บ่าย 3 (A3)</option>
+                            <option value="6">หยุด 1</option>
+                            <option value="7">หยุด 2</option>
+                        </select>
+                    </div>
+                    <div>
+                        <button id="btnUpdateTable" class="btn-red-orbit transition-transform active:scale-95">
+                            <div class="container-stars">
+                                <div class="stars-field"></div>
+                            </div>
+                            <div class="orbit-wrap">
+                                <div class="orbit-circle"></div>
+                                <div class="orbit-circle"></div>
+                            </div>
+                            <i class="fas fa-sync-alt"></i>
+                            <strong>อัปเดตตาราง</strong>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="relative z-10 flex gap-3 mb-5">
+                <button onclick="switchTab('paste')" id="tab-paste"
+                    class="btn-tab-rainbow active focus:outline-none md:flex-none">
+                    <div class="container-stars">
+                        <div class="stars-field"></div>
+                    </div>
+                    <div class="glow-wrap">
+                        <div class="circle"></div>
+                        <div class="circle"></div>
+                    </div>
+                    <i class="fas fa-paste"></i>
+                    <strong>วิธีที่ 1: ก๊อปวาง</strong>
+                </button>
+                <button onclick="switchTab('scan')" id="tab-scan"
+                    class="btn-tab-rainbow focus:outline-none md:flex-none">
+                    <div class="container-stars">
+                        <div class="stars-field"></div>
+                    </div>
+                    <div class="glow-wrap">
+                        <div class="circle"></div>
+                        <div class="circle"></div>
+                    </div>
+                    <i class="fas fa-camera"></i>
+                    <strong>วิธีที่ 2: สแกนรูป</strong>
+                </button>
+            </div>
+
+            <!-- Tab: Paste -->
+            <div id="content-paste" class="tab-content active relative z-10">
+                <label class="block text-sm font-semibold text-emerald-300 mb-2">วางข้อมูล Log ที่นี่:</label>
+                <textarea id="pasteInput"
+                    class="w-full h-40 bg-slate-800 border border-slate-600 text-slate-200 rounded-xl p-4 text-xs font-mono focus:ring-2 focus:ring-teal-500 focus:border-teal-500 outline-none transition-all"
+                    placeholder="วางข้อมูลดิบได้เลย..."></textarea>
+                <div class="flex gap-2 mt-3">
+                    <button onclick="processCopiedText()"
+                        class="flex-1 btn-spark py-3 rounded-xl shadow-lg transition-all">
+                        <div class="dots_border"></div>
+                        <i class="fas fa-file-import sparkle-icon"></i>
+                        <span class="text_button">แกะรหัสและดึงข้อมูล</span>
+                    </button>
+                </div>
+                <div class="mt-4 hidden" id="textDebugContainer">
+                    <p class="text-xs text-slate-500 mb-1 flex justify-between">
+                        <span>สถานะการแกะข้อมูล (Log):</span>
+                        <span class="cursor-pointer text-teal-400 hover:text-teal-300"
+                            onclick="document.getElementById('textDebugLog').innerHTML=''"> [ล้างค่า]</span>
+                    </p>
+                    <div class="debug-panel p-3 rounded-xl text-xs h-48 overflow-y-auto" id="textDebugLog"></div>
+                </div>
+            </div>
+
+            <!-- Tab: Scan -->
+            <div id="content-scan" class="tab-content hidden relative z-10">
+                <div class="border-2 border-dashed border-teal-700 rounded-xl p-8 text-center hover:border-emerald-400 hover:bg-emerald-500/5 cursor-pointer transition-all duration-300"
+                    onclick="document.getElementById('imageInput').click()">
+                    <input type="file" id="imageInput" accept="image/*" class="hidden"
+                        onchange="handleImageUpload(event)">
+                    <i class="fas fa-cloud-upload-alt text-3xl text-teal-500 mb-3"></i>
+                    <p class="font-bold text-teal-300">แตะเลือกรูปภาพ</p>
+                    <p class="text-xs text-slate-500 mt-1">รองรับ JPG, PNG, WEBP</p>
+                </div>
+                <div class="mt-4 hidden" id="imagePreviewContainer">
+                    <img id="imagePreview" class="max-h-48 mx-auto rounded-xl shadow-lg border border-teal-500/20">
+                    <canvas id="preprocessCanvas" class="hidden"></canvas>
+                </div>
+                <div class="mt-4">
+                    <p class="text-xs text-slate-500 mb-1 flex justify-between">
+                        <span>สถานะการอ่าน:</span><span class="cursor-pointer text-teal-400 hover:text-teal-300"
+                            onclick="document.getElementById('debugLog').innerHTML=''">[Clear]</span>
+                    </p>
+                    <div class="debug-panel p-3 rounded-xl text-xs h-32 overflow-y-auto" id="debugLog">[Ready]</div>
+                </div>
+                <button onclick="startOCR()" id="scanBtn"
+                    class="w-full mt-4 btn-spark py-3 rounded-xl shadow-lg disabled:opacity-50 transition-all" disabled>
+                    <div class="dots_border"></div>
+                    <i class="fas fa-magic sparkle-icon"></i>
+                    <span class="text_button">สแกนรูปภาพ</span>
+                </button>
+                <div id="ocrResultContainer" class="mt-4 hidden">
+                    <label class="block text-sm font-semibold text-emerald-300 mb-2">ผลลัพธ์ OCR
+                        (สามารถแก้ไขข้อความที่อ่านผิดได้ก่อนส่ง):</label>
+                    <textarea id="ocrResultText"
+                        class="w-full h-48 bg-slate-800 border border-slate-600 text-slate-200 rounded-xl p-3 text-xs font-mono focus:ring-2 focus:ring-teal-500 outline-none transition-all"
+                        placeholder="ผลลัพธ์จะแสดงที่นี่... (คุณสามารถตรวจสอบและแก้ไขตัวเลขที่ผิดพลาดได้)"></textarea>
+                    <div class="flex gap-2 mt-2">
+                        <button onclick="downloadOcrTxt()"
+                            class="flex-1 btn-spark py-2.5 rounded-xl shadow transition-all">
+                            <div class="dots_border"></div>
+                            <i class="fas fa-download sparkle-icon"></i>
+                            <span class="text_button">ดาวน์โหลด .TXT</span>
+                        </button>
+                        <button onclick="sendOcrToPaste()"
+                            class="flex-1 btn-spark py-2.5 rounded-xl shadow transition-all">
+                            <div class="dots_border"></div>
+                            <i class="fas fa-paste sparkle-icon"></i>
+                            <span class="text_button">ส่งไปวิธีที่ 1</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ═══ OT TABLE ═══ -->
+        <div class="glow-border-wrap mb-6 animate-in delay-2">
+            <div class="glow-border-inner">
+                <div class="overflow-x-auto max-h-[600px]">
+                    <table class="w-full text-sm text-left relative" id="mainTable">
+                        <thead class="text-xs sticky top-0 z-10">
+                            <tr class="bg-slate-900 border-b-2 border-teal-500/40">
+                                <th
+                                    class="px-3 py-3 text-center w-16 text-teal-300 font-bold text-xs uppercase tracking-wider">
+                                    วัน</th>
+                                <th
+                                    class="px-2 py-3 text-center w-16 text-teal-300 font-bold text-xs uppercase tracking-wider">
+                                    กะ</th>
+                                <th
+                                    class="px-2 py-3 text-center w-12 text-teal-300 font-bold text-xs uppercase tracking-wider">
+                                    วันหยุด?</th>
+                                <th
+                                    class="px-3 py-3 w-24 text-center text-teal-300 font-bold text-xs uppercase tracking-wider">
+                                    เวลาเข้า</th>
+                                <th
+                                    class="px-3 py-3 w-24 text-center text-teal-300 font-bold text-xs uppercase tracking-wider">
+                                    เวลาออก</th>
+                                <th
+                                    class="px-3 py-3 text-center w-20 text-emerald-300 font-bold text-xs uppercase tracking-wider">
+                                    OT 1.5</th>
+                                <th
+                                    class="px-3 py-3 text-center w-20 text-amber-300 font-bold text-xs uppercase tracking-wider">
+                                    OT 1.0</th>
+                                <th
+                                    class="px-3 py-3 w-32 text-left text-slate-400 font-bold text-xs uppercase tracking-wider">
+                                    หมายเหตุ (Auto)</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tableBody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- ═══ SUMMARY CARDS ═══ -->
+        <div class="grid grid-cols-2 gap-5 mb-6 animate-in delay-3">
+            <div
+                class="summary-card bg-gradient-to-br from-blue-600/80 to-blue-800/80 text-white p-6 text-center shadow-lg shadow-blue-500/10">
+                <p class="text-xs opacity-70 uppercase tracking-widest font-medium">OT ปกติ (1.5)</p>
+                <p class="value mt-2 text-blue-200" id="total15">0</p>
+                <p class="text-xs mt-1 opacity-60">ชั่วโมง</p>
+            </div>
+            <div
+                class="summary-card bg-gradient-to-br from-amber-500/80 to-amber-700/80 text-white p-6 text-center shadow-lg shadow-amber-500/10">
+                <p class="text-xs opacity-70 uppercase tracking-widest font-medium">OT วันหยุด (1.0)</p>
+                <p class="value mt-2 text-amber-200" id="total1">0</p>
+                <p class="text-xs mt-1 opacity-60">ชั่วโมง</p>
+            </div>
+        </div>
+
+        <!-- ═══ FOOTER ═══ -->
+        <footer class="site-footer animate-in delay-4">
+            <p>ระบบคำนวณโอที <span class="ver">V.72</span> — ฝ่ายปฏิบัติการคลังน้ำมันขอนแก่น</p>
+            <p class="mt-1 opacity-60">Midnight Fuel Edition ✦</p>
+        </footer>
+
+    </div>
+
+    <div id="formModal" class="fixed inset-0 bg-black/70 z-50 hidden overflow-y-auto backdrop-blur-sm">
+        <div class="min-h-screen flex flex-col items-center justify-start py-8 px-4">
+            <div class="bg-white p-2 rounded-lg shadow-xl mb-6 flex gap-2 no-print sticky top-4 z-50">
+                <button onclick="downloadPDF()"
+                    class="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700 font-medium shadow"><i
+                        class="fas fa-file-pdf mr-2"></i>PDF</button>
+                <button onclick="downloadExcel()"
+                    class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 font-medium shadow"><i
+                        class="fas fa-file-excel mr-2"></i>Excel</button>
+                <button onclick="window.print()"
+                    class="bg-indigo-600 text-white px-4 py-2 rounded hover:bg-indigo-700 font-medium shadow"><i
+                        class="fas fa-print mr-2"></i>พิมพ์</button>
+                <div class="w-px bg-gray-300 mx-2"></div>
+                <button onclick="closeFormModal()"
+                    class="bg-gray-200 text-gray-700 px-4 py-2 rounded hover:bg-gray-300 font-medium">ปิด</button>
+            </div>
+            <div id="printableArea" class="a4-paper text-black">
+                <div class="flex justify-between items-start mb-2">
+                    <div class="relative group cursor-pointer"
+                        onclick="document.getElementById('logoUploader').click()"
+                        title="คลิกเพื่ออัปโหลดโลโก้ใหม่">
+                        <input type="file" id="logoUploader" accept="image/*" class="hidden"
+                            onchange="updateLogo(event)">
+                        <img id="tpnLogo" src="Logo.png" style="max-height: 45px; width: auto;" alt="TPN Logo"
+                            class="h-16 object-contain" onerror="this.style.display='none'; document.getElementById('tpnTextLogo').classList.remove('hidden');">
+                        <div id="tpnTextLogo" class="hidden">
+                            <span class="text-xs font-bold text-gray-800">ที่ บมจ. ทีพีเอ็น</span>
+                        </div>
+                        <img id="tpnLogoMobile" src="Logo.png" class="hidden" onerror="this.style.display='none';">
+
+                    </div>
+                    <div class="text-center flex-1">
+                        <div class="font-bold text-lg">
+                            ใบขออนุมัติทำงานล่วงเวลา/ทำงานในวันหยุด
+                        </div>
+                        <div class="font-bold text-base">
+                            ฝ่ายปฏิบัติการคลังน้ำมันขอนแก่น
+                        </div>
+                        <div class="text-sm mt-1">ประจำเดือน <span id="formMonthLabel" class="font-bold"></span>
+                        </div>
+                    </div>
+                    <div style="width: 50px;"></div>
+                </div>
+                <div class="mb-6 grid grid-cols-2 gap-y-4 gap-x-4">
+                    <div class="flex items-end"><span class="font-bold min-w-24 mr-2">ชื่อ-สกุล:</span><input
+                            type="text" id="formName"
+                            class="flex-1 border-b border-black outline-none px-2 py-0 bg-transparent font-medium w-32"
+                            value="PIPHATPHONG WORADEE"></div>
+                    <div class="flex items-end"><span class="font-bold min-w-24 mr-2">รหัสพนักงาน:</span><input
+                            type="text" class="flex-1 border-b border-black outline-none px-2 py-0 bg-transparent w-32"
+                            placeholder="1468003"></div>
+                    <div class="flex items-end"><span class="font-bold min-w-24 mr-2">ตำแหน่ง:</span><input type="text"
+                            class="flex-1 border-b border-black outline-none px-2 py-0 bg-transparent w-32"
+                            value="พนักงานปฏิบัติการ"></div>
+                    <div class="flex items-end"><span class="font-bold min-w-24 mr-2">สังกัด:</span><input type="text"
+                            class="flex-1 border-b border-black outline-none px-2 py-0 bg-transparent w-32"
+                            value="คลังน้ำมันขอนแก่น"></div>
+                </div>
+                <table class="form-table mb-4" id="exportTable" style="width: 100%; table-layout: fixed;">
+                    <thead>
+                        <tr>
+                            <th rowspan="2" style="width: 40px;">ลำดับที่</th>
+                            <th rowspan="2" style="width: 120px;">ชื่อ - นามสกุล</th>
+                            <th rowspan="2" style="width: 90px;">วันที่ขออนุมัติ<br>ทำงานล่วงเวลา</th>
+                            <th colspan="2" style="width: 100px;">เวลาที่ทำงานล่วงเวลา</th>
+                            <th rowspan="2" style="width: 120px;">งานที่ได้รับปฏิบัติ</th>
+                            <th colspan="3" style="width: 100px;">จำนวนชั่วโมงที่ใช้ทำงานล่วงเวลา</th>
+                            <th rowspan="2" style="width: 90px;">ลงชื่อผู้ปฏิบัติงาน</th>
+                        </tr>
+
+                        <tr>
+                            <th>IN</th>
+                            <th>OUT</th>
+                            <th>1 เท่า</th>
+                            <th>1.5 เท่า</th>
+                            <th>3 เท่า</th>
+                        </tr>
+                    </thead>
+                    <tbody id="formTableBody"></tbody>
+                    <tfoot>
+                        <tr class="bg-gray-50 font-bold">
+                            <td colspan="6" class="border border-black p-2 text-right pr-4">
+                                รวมจำนวนชั่วโมง</td>
+                            <td class="border border-black p-2 text-center" id="sum1">0</td>
+                            <td class="border border-black p-2 text-center" id="sum15">0</td>
+                            <td class="border border-black p-2 text-center" id="sum3">0</td>
+                            <td class="border border-black p-2"></td>
+                        </tr>
+                    </tfoot>
+                </table>
+                <div class="mt-6">
+                    <div class="flex justify-between px-4">
+                        <div class="text-center w-1/2">
+                            <div class="mb-6 font-medium">
+                                ลงชื่อ................................................ ผู้ขอ
+                            </div>
+                            <div>( นายนิมิต กาญจนภูวดล )</div>
+                            <div>ผู้จัดการแผนก/หัวหน้าส่วนงาน
+                            </div>
+                            <div class="text-sm mt-1">วันที่ ........../........../..........</div>
+                        </div>
+                        <div class="text-center w-1/2">
+                            <div class="mb-6 font-medium">
+                                ลงชื่อ................................................ ผู้อนุมัติ
+                            </div>
+                            <div>( นายชาญชัย มาศวิเชียร )</div>
+                            <div>
+                                ผู้จัดการฝ่าย/ผู้บริหารระดับสูงกว่า
+                            </div>
+                            <div class="text-sm mt-1">วันที่ ........../........../..........</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="notes mt-6 text-xs text-gray-600 px-4">
+                    <strong>***หมายเหตุ</strong>
+                    <ol class="ml-4 mt-1">
+                        <li>หัวหน้าส่วนงานที่มีความจำเป็นต้องให้พนักงานปฏิบัติงานล่วงเวลา/ปฏิบัติงานในวันหยุดต้องจัดทำรายละเอียดเสนอผู้อนุมัติล่วงหน้า
+                        </li>
+                        <li>ส่งต้นฉบับให้แผนกธุรการ แผนกบุคคล ฝ่ายปฏิบัติการส่วนภูมิภาค อย่างน้อยก่อนเวลา 17.00 น.
+                            ของทุกวัน</li>
+                        <li>ฝ่ายคลังส่งสำเนาแจ้งแผนกธุรการ แผนกบุคคล ฝ่ายปฏิบัติการส่วนภูมิภาคตามลำดับเพื่อดำเนินการ
+                        </li>
+                        <li>เวลาที่เริ่มทำงานล่วงเวลา หมายถึงเวลาที่เริ่มทำงานล่วงเวลาจริงที่นอกเหนือจากการทำงานปกติ
+                            เช่น 08:30-17:30 น. แต่ถ้ามีงานเร่งด่วนอาจเริ่มทำงานล่วงเวลาได้ทันที</li>
+                        <li>เวลาที่เลิกทำงานล่วงเวลา
+                            หมายถึงเวลาที่พนักงานปฏิบัติงานจนถึงเวลาเลิกงานที่แจ้งไว้ข้างต้น
+                            หรือทำงานจนเสร็จสิ้นงาน</li>
+                    </ol>
+                </div>
+            </div>
+        </div>
+    </div>
+    <canvas id="logoCanvas" width="200" height="100" style="display:none;"></canvas>
+
+    <script>
+        let worker;
+        let userData = {};
+        let globalExtractedName = "";
+
+        window.addEventListener('unhandledrejection', e => { if (e.reason?.isTrusted !== true) console.warn(e.reason); e.preventDefault(); });
+
+        const SHIFT_PATTERN = [
+            { code: 'M1', name: 'เช้า 1', type: 'M', start: '07:00' }, { code: 'M2', name: 'เช้า 2', type: 'M', start: '07:00' }, { code: 'M3', name: 'เช้า 3', type: 'M', start: '07:00' },
+            { code: 'A1', name: 'บ่าย 1', type: 'A', start: '15:00' }, { code: 'A2', name: 'บ่าย 2', type: 'A', start: '15:00' }, { code: 'A3', name: 'บ่าย 3', type: 'A', start: '15:00' },
+            { code: 'Off1', name: 'หยุด 1', type: 'Off', start: null }, { code: 'Off2', name: 'หยุด 2', type: 'Off', start: null },
+        ];
+
+        const HOLIDAYS = {
+            '2026-01-01': 'วันขึ้นปีใหม่', '2026-01-02': 'วันหยุดชดเชยปีใหม่', '2026-03-03': 'วันมาฆบูชา',
+            '2026-04-06': 'วันจักรี', '2026-04-13': 'วันสงกรานต์', '2026-04-14': 'วันสงกรานต์', '2026-04-15': 'วันสงกรานต์',
+            '2026-05-01': 'วันแรงงานแห่งชาติ', '2026-05-04': 'วันฉัตรมงคล', '2026-06-01': 'ชดเชยวันวิสาขบูชา',
+            '2026-06-03': 'วันเฉลิมฯ พระราชินี', '2026-07-28': 'วันเฉลิมฯ ร.10', '2026-07-29': 'วันอาสาฬหบูชา',
+            '2026-08-12': 'วันแม่แห่งชาติ', '2026-10-13': 'วันนวมินทรมหาราช', '2026-10-23': 'วันปิยมหาราช',
+            '2026-12-07': 'ชดเชยวันพ่อแห่งชาติ', '2026-12-10': 'วันรัฐธรรมนูญ', '2026-12-31': 'วันสิ้นปี'
+        };
+
+        function getShift(dateStr) {
+            const monthVal = document.getElementById('targetMonth').value;
+            if (!monthVal) return SHIFT_PATTERN[0];
+            const refDate = moment(monthVal + '-01');
+            const refIdx = parseInt(document.getElementById('refShift').value) || 0;
+            const diff = moment(dateStr).diff(refDate, 'days');
+            let idx = (refIdx + diff) % 8;
+            if (idx < 0) idx += 8;
+            return SHIFT_PATTERN[idx] || SHIFT_PATTERN[0];
+        }
+
+        // --- CENTRAL CALCULATION LOGIC ---
+        function calculateDailyStats(dateStr, inTime, outTime, isHolidayChecked, shiftType) {
+            let ot15 = 0;
+            let ot1 = 0;
+            let note = "";
+            const isHol = isHolidayChecked || !!HOLIDAYS[dateStr];
+            const isOffShift = shiftType === 'Off';
+            let holName = HOLIDAYS[dateStr] || "วันหยุด";
+
+            if (inTime && outTime) {
+                let startRaw = moment(`${dateStr} ${inTime}`);
+                let endRaw = moment(`${dateStr} ${outTime}`);
+                if (endRaw.isBefore(startRaw)) endRaw.add(1, 'd');
+
+                // Snap Logic (Bug #4 fixed: endRaw adjust for 3:00 cross-day)
+                let start = startRaw.clone(), end = endRaw.clone();
+                [7, 15, 19, 23, 3].forEach(h => {
+                    let target = startRaw.clone().hour(h).minute(0);
+                    if (h === 3 && startRaw.hour() > 20) target.add(1, 'd');
+                    if (Math.abs(startRaw.diff(target, 'minutes')) <= 30) start = target;
+
+                    let targetEnd = endRaw.clone().hour(h).minute(0);
+                    if (h === 3 && endRaw.hour() <= 5 && endRaw.date() !== moment(dateStr).date()) targetEnd.add(1, 'd');
+                    if (Math.abs(endRaw.diff(targetEnd, 'minutes')) <= 30) end = targetEnd;
+                });
+
+                const startH = start.hour();
+                const dur = end.diff(start, 'hours', true);
+                let isPipe = false;
+
+                // Pipeline Detection (Bug #3 fixed: cross-day check for night shift)
+                // กะ Off ข้าม Pipeline → คิด OT เต็มชั่วโมง (2 แรง)
+                if (startH === 7 && dur >= 11 && end.hour() === 19) {
+                    isPipe = true;
+                    if (!isOffShift) { note = "รับน้ำมัน กะเช้า (OT 4)"; ot15 = 4; }
+                } else if (startH === 19 && dur >= 11 && end.hour() === 7 && end.date() !== start.date()) {
+                    isPipe = true;
+                    if (!isOffShift) { note = "รับน้ำมัน กะดึก (OT 4)"; ot15 = 4; }
+                }
+
+                if (!isPipe) {
+                    let workDuration = end.diff(start, 'hours', true);
+
+                    // Bug #2 fixed: กะ Off ไม่ลบ 8 (2 แรง)
+                    let excess = isOffShift ? workDuration : (workDuration - 8);
+
+                    // Bug #5 fixed: ปัดเป็นนาทีก่อนลด floating point error
+                    if (excess > 0) {
+                        let totalMinutes = Math.round(excess * 60);
+                        let h = Math.floor(totalMinutes / 60);
+                        if (totalMinutes % 60 >= 30) h++;
+                        ot15 = h;
+                    }
+                    if (ot15 === 0 && !isHol && !isOffShift) note = "ปกติ";
+
+                    // วันหยุดนักขัตฤกษ์: OT 1.5 = 0 เสมอ
+                    if (isHol) ot15 = 0;
+                }
+
+                if (isHol || isOffShift) {
+                    // Use SNAPPED times (same as OT 1.5 calc) to get correct duration
+                    // e.g. in=07:01 snaps to 07:00, so 07:00→15:00 = 8h (not 7h59m)
+                    const hoursWorked = end.diff(start, 'hours', true);
+                    const hoursWorkedMins = Math.round(hoursWorked * 60);
+                    ot1 = Math.min(8, Math.floor(hoursWorkedMins / 60));
+                    if (ot1 < 0) ot1 = 0;
+                    if (ot1 > 0) {
+                        if (isOffShift && !HOLIDAYS[dateStr]) holName = "กะหยุด (2 แรง)";
+                        note = note ? note + ", " + holName : holName;
+                    }
+                }
+            } else if (isHol) {
+                // Holiday normally gets 8 hours OT1 even if not worked? Check user logic. 
+                // The old logic always gave 8. We'll keep it but only if missing times.
+                ot1 = 8;
+                note = note ? note + ", " + holName : holName;
+            }
+
+            return { ot15, ot1, note };
+        }
+
+        // --- DOM CALC WRAPPER ---
+        function calc(dateStr) {
+            const inEl = document.getElementById(`in-${dateStr}`);
+            const outEl = document.getElementById(`out-${dateStr}`);
+            const noteEl = document.getElementById(`note-${dateStr}`);
+            const holCheck = document.getElementById(`holiday-${dateStr}`);
+
+            // Update State
+            if (!userData[dateStr]) userData[dateStr] = {};
+            userData[dateStr].in = inEl.value; userData[dateStr].out = outEl.value;
+
+            const shift = getShift(dateStr);
+            const stats = calculateDailyStats(dateStr, inEl.value, outEl.value, holCheck.checked, shift.type);
+
+            // Update display (set text of first child text, preserve hidden input)
+            const disp15El = document.getElementById(`disp15-${dateStr}`);
+            const disp1El = document.getElementById(`disp1-${dateStr}`);
+            document.getElementById(`val15-${dateStr}`).value = stats.ot15;
+            document.getElementById(`val1-${dateStr}`).value = stats.ot1;
+            disp15El.childNodes[0].textContent = stats.ot15 > 0 ? stats.ot15 : '-';
+            disp1El.childNodes[0].textContent = stats.ot1 > 0 ? stats.ot1 : '-';
+
+            noteEl.innerText = stats.note || '-';
+            if (stats.note.includes("ปกติ")) noteEl.className = "px-2 text-left text-xs text-green-600 font-bold";
+            else if (stats.note.includes("OT") || stats.note.includes("วันหยุด") || stats.note.includes("กะหยุด") || stats.note.includes("2 แรง")) noteEl.className = "px-2 text-left text-xs text-red-600 font-bold";
+            else noteEl.className = "px-2 text-left text-xs text-gray-500";
+
+            // Update Totals
+            let t15 = 0, t1 = 0;
+            document.querySelectorAll('input[id^="val15-"]').forEach(e => t15 += Number(e.value));
+            document.querySelectorAll('input[id^="val1-"]').forEach(e => t1 += Number(e.value));
+            document.getElementById('total15').innerText = t15;
+            document.getElementById('total1').innerText = t1;
+        }
+
+        // --- PARSER ---
+        function processCopiedText() {
+            try {
+                let rawText = document.getElementById('pasteInput').value;
+                if (!rawText.trim()) return alert("กรุณาวางข้อมูล");
+
+                const monthVal = document.getElementById('targetMonth').value;
+                const [targetYear, targetMonth] = monthVal.split('-').map(Number);
+
+                // ---- DATE & TIME EXTRACTION ----
+                let allTimes = [];
+                let match;
+
+                // 1. Standard: YYYY-MM-DD HH:MM / DD/MM/YYYY HH:MM:SS
+                const regexStd = /(\d{2,4}[-/\.]\d{1,2}[-/\.]\d{2,4})[\sT]*(\d{1,2}[:.]\d{2}(?:[:.]\d{2})?)/g;
+                while ((match = regexStd.exec(rawText)) !== null) {
+                    let dateStr = match[1].replace(/[\.\/]/g, '-');
+                    let timeStr = match[2].replace(/\./g, ':');
+                    if (timeStr.length === 4) timeStr = '0' + timeStr;
+                    if (timeStr.length === 5) timeStr += ":00";
+                    let parsedDate = moment(dateStr, ['YYYY-MM-DD', 'DD-MM-YYYY', 'YYYY-MM-D', 'D-MM-YYYY']);
+                    if (parsedDate.isValid()) {
+                        allTimes.push(moment(`${parsedDate.format('YYYY-MM-DD')}T${timeStr}`));
+                    }
+                }
+
+                // 2. Space separated: YYYY MM DD HH:MM (Access Control log screenshot common pattern)
+                const regexSpace = /(20\d{2})\s+(\d{1,2})\s+(\d{1,2})\s+(\d{1,2})[:.\s](\d{2})/g;
+                while ((match = regexSpace.exec(rawText)) !== null) {
+                    const yr = match[1], mo = match[2].padStart(2, '0'), dy = match[3].padStart(2, '0');
+                    const hr = match[4].padStart(2, '0'), mn = match[5];
+                    const dt = moment(`${yr}-${mo}-${dy}T${hr}:${mn}:00`);
+                    if (dt.isValid()) {
+                        // Avoid duplicates if already caught by regexStd
+                        if (!allTimes.some(t => t.format('YYYY-MM-DD HH:mm') === dt.format('YYYY-MM-DD HH:mm'))) {
+                            allTimes.push(dt);
+                        }
+                    }
+                }
+
+                // 3. Fallback: Sometimes Tesseract drops the year. Look for MM DD HH MM
+                if (allTimes.length === 0) {
+                    const regexNoYear = /(\d{1,2})\s+(\d{1,2})\s+(\d{1,2})[:.\s](\d{2})/g;
+                    while ((match = regexNoYear.exec(rawText)) !== null) {
+                        const mo = match[1].padStart(2, '0'), dy = match[2].padStart(2, '0');
+                        const hr = match[3].padStart(2, '0'), mn = match[4];
+                        const dt = moment(`${targetYear}-${mo}-${dy}T${hr}:${mn}:00`);
+                        if (dt.isValid()) allTimes.push(dt);
+                    }
+                }
+
+                // 4. Fallback 2: Copied directly from the app's log result (Day 1: 07:22 - 15:32)
+                if (allTimes.length === 0) {
+                    const regexLogApp = /Day\s+(\d{1,2}):\s+(\d{1,2})[:.](\d{2})\s+[-~]\s+(\d{1,2})[:.](\d{2})/gi;
+                    while ((match = regexLogApp.exec(rawText)) !== null) {
+                        const dy = match[1].padStart(2, '0');
+                        const h1 = match[2].padStart(2, '0');
+                        const m1 = match[3];
+                        const dt1 = moment(targetYear + '-' + String(targetMonth).padStart(2, '0') + '-' + dy + 'T' + h1 + ':' + m1 + ':00');
+                        if (dt1.isValid()) allTimes.push(dt1);
+
+                        const h2 = match[4].padStart(2, '0');
+                        const m2 = match[5];
+                        const dt2 = moment(targetYear + '-' + String(targetMonth).padStart(2, '0') + '-' + dy + 'T' + h2 + ':' + m2 + ':00');
+                        if (dt2.isValid()) allTimes.push(dt2);
+                    }
+                }
+
+                // 5. Fallback 3: Copied directly from Table output (e.g. 2 ???.  07:01 15:00)
+                if (allTimes.length === 0) {
+                    const regexTableApp = /(\d{1,2})\s+[^\d]+(\d{1,2})[:.](\d{2})\s+(\d{1,2})[:.](\d{2})/g;
+                    while ((match = regexTableApp.exec(rawText)) !== null) {
+                        const dy = match[1].padStart(2, '0');
+                        const dt1 = moment(targetYear + '-' + String(targetMonth).padStart(2, '0') + '-' + dy + 'T' + match[2].padStart(2, '0') + ':' + match[3] + ':00');
+                        const dt2 = moment(targetYear + '-' + String(targetMonth).padStart(2, '0') + '-' + dy + 'T' + match[4].padStart(2, '0') + ':' + match[5] + ':00');
+                        if (dt1.isValid()) allTimes.push(dt1);
+                        if (dt2.isValid()) allTimes.push(dt2);
+                    }
+                }
+
+                log(`แยกข้อมูลวันที่และเวลาสำเร็จ พบจำนวน ${allTimes.length} รายการ`, 'info', 'textDebugLog');
+
+                // ---- NAME EXTRACTION ----
+                // Try to find first all-caps English name near a numeric ID (e.g. access card number)
+                const nameMatch = rawText.match(/\d{5,10}\s+([A-Z][A-Z]+(?:\s+[A-Z][A-Z]+)*)/);
+                if (nameMatch) globalExtractedName = nameMatch[1].trim();
+
+                if (allTimes.length === 0) return alert("ไม่พบข้อมูลวันที่ใน Log");
+                allTimes.sort((a, b) => a.diff(b));
+
+                document.getElementById('textDebugContainer').classList.remove('hidden');
+                document.getElementById('textDebugLog').innerHTML = '';
+                log("เริ่มการจับคู่แบบ Strict Shift (Flexible Input)...", 'info', 'textDebugLog');
+
+                let usedIndices = new Set();
+                let matched = 0;
+
+                for (let i = 0; i < allTimes.length; i++) {
+                    if (usedIndices.has(i)) continue;
+
+                    const tIn = allTimes[i];
+                    const hIn = tIn.hour();
+                    let isStart = false;
+
+                    if (hIn >= 5 && hIn <= 9) isStart = true;
+                    else if (hIn >= 13 && hIn <= 16) isStart = true;
+                    else if (hIn >= 17 && hIn <= 21) isStart = true;
+
+                    if (isStart) {
+                        let foundOut = null;
+                        for (let j = i + 1; j < allTimes.length; j++) {
+                            if (usedIndices.has(j)) continue;
+                            const tCheck = allTimes[j];
+                            const diffHrs = tCheck.diff(tIn, 'hours', true);
+
+                            if (diffHrs < 3) continue;
+                            if (diffHrs > 16) break;
+
+                            const checkH = tCheck.hour();
+                            let isNextDay = tCheck.date() !== tIn.date();
+
+                            if (hIn >= 17 && isNextDay) {
+                                foundOut = tCheck; usedIndices.add(j); break;
+                            } else if (hIn < 17 && !isNextDay) {
+                                foundOut = tCheck; usedIndices.add(j); break;
+                            } else if (hIn >= 13 && hIn <= 16 && isNextDay && checkH <= 5) {
+                                foundOut = tCheck; usedIndices.add(j); break;
+                            }
+                        }
+                        const dayNum = tIn.date();
+                        if (tIn.month() + 1 === targetMonth) {
+                            let times = [tIn.format("HH:mm")];
+                            if (foundOut) times.push(foundOut.format("HH:mm"));
+
+                            const m = document.getElementById('targetMonth').value;
+                            const ds = `${m}-${String(dayNum).padStart(2, '0')}`;
+                            const existIn = document.getElementById(`in-${ds}`)?.value;
+                            const existOut = document.getElementById(`out-${ds}`)?.value;
+
+                            // Only overwrite if: no existing data, OR new match is more complete than old
+                            const hasExistingComplete = existIn && existOut;
+                            const newIsComplete = times.length >= 2;
+                            if (!hasExistingComplete || newIsComplete) {
+                                fillRow(dayNum, times);
+                                log(`Day ${dayNum}: ${times.join(" - ")}`, 'success', 'textDebugLog');
+                                matched++;
+                            } else {
+                                log(`Day ${dayNum}: ข้ามแล้ว (มีข้อมูลครบแล้ว: ${existIn} - ${existOut})`, 'info', 'textDebugLog');
+                            }
+                        }
+                        usedIndices.add(i);
+                    }
+                }
+                setTimeout(() => alert(`ดึงข้อมูลสำเร็จ! พบและจับคู่ได้ ${matched} วัน`), 500);
+
+            } catch (e) { alert(e.message); }
+        }
+
+        // --- HELPER FUNCTIONS ---
+        function switchTab(tab) {
+            try {
+                console.log("SWITCH_TAB CALLED:", tab);
+                // Remove active class from all tabs and contents
+                document.querySelectorAll('.btn-tab-rainbow').forEach(b => {
+                    b.classList.remove('active');
+                });
+                document.querySelectorAll('.tab-content').forEach(c => {
+                    c.classList.remove('active');
+                    c.classList.add('hidden');
+                });
+
+                // Add active class to selected tab and content
+                const selectedTab = document.getElementById(`tab-${tab}`);
+                const selectedContent = document.getElementById(`content-${tab}`);
+
+                if (selectedTab && selectedContent) {
+                    selectedTab.classList.add('active');
+                    selectedContent.classList.add('active');
+                    selectedContent.classList.remove('hidden');
+                }
+            } catch (err) {
+                console.error("Tab switch error:", err);
+            }
+        }
+        function log(msg, type, target) {
+            const el = document.getElementById(target);
+            el.innerHTML += `<div class="text-${type === 'success' ? 'green' : 'gray'}-400 border-b border-gray-700/50 pb-1 font-mono">${msg}</div>`;
+        }
+        function updateLogo(e) {
+            const f = e.target.files[0];
+            if (f) { const r = new FileReader(); r.onload = x => { document.getElementById('tpnLogo').src = x.target.result; document.getElementById('tpnLogo').classList.remove('hidden'); document.getElementById('tpnTextLogo').classList.add('hidden'); }; r.readAsDataURL(f); }
+        }
+        function updateTableBtn() { generateTable(); document.getElementById('toast').className = "show"; setTimeout(() => document.getElementById('toast').className = "", 3000); }
+
+        function fillRow(day, times) {
+            const m = document.getElementById('targetMonth').value;
+            const dateStr = `${m}-${String(day).padStart(2, '0')}`;
+            if (!userData[dateStr]) userData[dateStr] = {};
+            userData[dateStr].in = times[0];
+            userData[dateStr].out = times[1] || "";
+
+            const inEl = document.getElementById(`in-${dateStr}`);
+            const outEl = document.getElementById(`out-${dateStr}`);
+            if (inEl) {
+                inEl.value = times[0];
+                outEl.value = times[1] || "";
+                inEl.parentElement.classList.add('new-data');
+                outEl.parentElement.classList.add('new-data');
+                calc(dateStr);
+            }
+        }
+
+        function generateTable() {
+            const m = document.getElementById('targetMonth').value;
+            const [y, mo] = m.split('-').map(Number);
+            const days = new Date(y, mo, 0).getDate();
+            const tbody = document.getElementById('tableBody');
+            tbody.innerHTML = '';
+            for (let i = 1; i <= days; i++) {
+                const dateStr = `${m}-${String(i).padStart(2, '0')}`;
+                const shift = getShift(dateStr);
+                const saved = userData[dateStr] || {};
+                const isHol = !!HOLIDAYS[dateStr];
+                const row = `<tr class="border-b hover:bg-gray-50 transition">
+                    <td class="px-3 py-2 text-center text-sm">${i} <span class="text-xs text-gray-400">${moment(dateStr).format('dd')}</span></td>
+                    <td class="px-2 text-center"><span class="px-2 py-1 rounded text-xs font-bold ${shift.type === 'M' ? 'bg-blue-100 text-blue-800' : (shift.type === 'A' ? 'bg-pink-100 text-pink-800' : 'bg-gray-100 text-gray-500')}">${shift.code}</span></td>
+                    <td class="text-center"><input type="checkbox" id="holiday-${dateStr}" ${isHol ? 'checked' : ''} onchange="calc('${dateStr}')" class="w-4 h-4"></td>
+                    <td class="text-center"><input type="time" id="in-${dateStr}" value="${saved.in || ''}" class="border rounded px-1 w-full text-center" onchange="calc('${dateStr}')"></td>
+                    <td class="text-center"><input type="time" id="out-${dateStr}" value="${saved.out || ''}" class="border rounded px-1 w-full text-center" onchange="calc('${dateStr}')"></td>
+                    <td class="text-center font-bold text-blue-600" id="disp15-${dateStr}">-<input type="hidden" id="val15-${dateStr}" value="0"></td>
+                    <td class="text-center font-bold text-yellow-600" id="disp1-${dateStr}">-<input type="hidden" id="val1-${dateStr}" value="0"></td>
+                    <td class="px-2 text-left text-xs text-gray-500" id="note-${dateStr}">-</td>
+                </tr>`;
+                tbody.insertAdjacentHTML('beforeend', row);
+                // Trigger calc to show initial state
+                if (saved.in || saved.out || isHol) {
+                    // We need to wait for DOM elements to be ready. 
+                    // They are inserted synchronously, so it should be fine.
+                    calc(dateStr);
+                }
+            }
+        }
+
+        // --- IMAGE UPLOAD & OCR ---
+        let uploadedImageFile = null;
+
+        function handleImageUpload(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            uploadedImageFile = file;
+            const reader = new FileReader();
+            reader.onload = function (ev) {
+                const preview = document.getElementById('imagePreview');
+                preview.src = ev.target.result;
+                document.getElementById('imagePreviewContainer').classList.remove('hidden');
+                document.getElementById('scanBtn').disabled = false;
+                document.getElementById('scanBtn').className = 'w-full mt-4 bg-indigo-600 hover:bg-indigo-700 text-white py-3 rounded-lg font-bold shadow transition-all';
+                log('รูปภาพพร้อมสแกน: ' + file.name + ' (' + (file.size / 1024).toFixed(1) + ' KB)', 'success', 'debugLog');
+            };
+            reader.readAsDataURL(file);
+        }
+
+        // Bug #6: Loading overlay helpers
+        function showLoading(msg) {
+            const el = document.getElementById('loadingOverlay');
+            el.style.display = 'flex';
+            document.getElementById('loadingStatus').innerText = msg || 'Processing...';
+        }
+        function hideLoading() {
+            document.getElementById('loadingOverlay').style.display = 'none';
+        }
+
+        async function startOCR() {
+            if (!uploadedImageFile) return alert('กรุณาเลือกรูปภาพก่อน');
+
+            const scanBtn = document.getElementById('scanBtn');
+            scanBtn.disabled = true;
+            scanBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> กำลังประมวลผล...';
+            showLoading('กำลังเตรียมรูปภาพ...');
+            log('เริ่มสแกน OCR (ภาษาไทย + อังกฤษ)...', 'info', 'debugLog');
+
+            try {
+                // --- Step 1: Preprocess image for better OCR ---
+                const imageUrl = await new Promise((resolve) => {
+                    const reader = new FileReader();
+                    reader.onload = e => resolve(e.target.result);
+                    reader.readAsDataURL(uploadedImageFile);
+                });
+
+                const originalImg = await new Promise((resolve, reject) => {
+                    const img = new Image();
+                    img.onload = () => resolve(img);
+                    img.onerror = reject;
+                    img.src = imageUrl;
+                });
+
+                // --- Preprocessing: Dynamic Scale + Color-based text isolation ---
+                // Key insight: Access Control tables have COLORED text (blue/dark) on white/light background
+                // Grayscale+threshold FAILS because blue text blends with blue-tinted backgrounds
+                // Solution: isolate dark pixels (text) from light pixels (background)
+
+                const minWidth = 3000;
+                const dynScale = Math.max(4, Math.ceil(minWidth / originalImg.width));
+                log(`Scale: ${dynScale}x (${originalImg.width}→${originalImg.width * dynScale}px)`, 'info', 'debugLog');
+
+                const canvas = document.getElementById('preprocessCanvas');
+                canvas.width = originalImg.width * dynScale;
+                canvas.height = originalImg.height * dynScale;
+                const ctx = canvas.getContext('2d');
+                ctx.imageSmoothingEnabled = true;
+                ctx.imageSmoothingQuality = 'high';
+                ctx.drawImage(originalImg, 0, 0, canvas.width, canvas.height);
+
+                // Color filter: dark pixels → black (text), light pixels → white (background)
+                const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+                const d = imgData.data;
+                const darkThreshold = 140; // pixels darker than this = text
+                for (let i = 0; i < d.length; i += 4) {
+                    const r = d[i], g = d[i + 1], b = d[i + 2];
+                    // Luminance (perceived brightness)
+                    const lum = 0.299 * r + 0.587 * g + 0.114 * b;
+                    // Also detect blue text specifically (blue > red && blue > green)
+                    const isBlueText = b > 100 && b > r * 1.3 && lum < 180;
+                    const isDarkText = lum < darkThreshold;
+                    if (isDarkText || isBlueText) {
+                        d[i] = d[i + 1] = d[i + 2] = 0; // black
+                    } else {
+                        d[i] = d[i + 1] = d[i + 2] = 255; // white
+                    }
+                    d[i + 3] = 255;
+                }
+                ctx.putImageData(imgData, 0, 0);
+                log(`ปรับรูปภาพ: ${originalImg.width}x${originalImg.height} → ${canvas.width}x${canvas.height}`, 'info', 'debugLog');
+
+                const processedBlob = await new Promise(r => canvas.toBlob(r, 'image/png'));
+
+                // --- OCR ---
+                const hasUsefulData = (t) => /\d{4}[-\s/.]\d{1,2}[-\s/.]\d{1,2}/.test(t) && /\d{1,2}[:.]\d{2}/.test(t);
+                const logPreview = (label, t) => {
+                    const preview = t.substring(0, 500).replace(/\n/g, ' | ');
+                    log(`[${label}] ${preview}`, 'info', 'debugLog');
+                };
+
+                document.getElementById('loadingStatus').innerText = 'กำลังโหลด OCR Engine...';
+
+                const worker = await Tesseract.createWorker('tha+eng', 1, {
+                    logger: m => {
+                        if (m.status === 'recognizing text') {
+                            const pct = (m.progress * 100).toFixed(0);
+                            scanBtn.innerHTML = `<i class="fas fa-spinner fa-spin mr-2"></i> สแกน ${pct}%`;
+                            document.getElementById('loadingStatus').innerText = `สแกน... ${pct}%`;
+                        }
+                    }
+                });
+
+                // Strategy 1: Color-filtered image + Whitelist
+                log('Strategy 1: Color-filtered + Whitelist...', 'info', 'debugLog');
+                await worker.setParameters({
+                    tessedit_pageseg_mode: '6',
+                    preserve_interword_spaces: '1',
+                    tessedit_char_whitelist: '0123456789-:./_ ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz'
+                });
+                let result = await worker.recognize(processedBlob);
+                let text = result.data.text.trim();
+                let data = result.data;
+                log(`S1: ${data.words.length} คำ, confidence ${data.confidence.toFixed(1)}%`, 'info', 'debugLog');
+                logPreview('S1', text);
+
+                // Strategy 2: Color-filtered + PSM 4 (column mode)
+                if (!hasUsefulData(text)) {
+                    log('Strategy 2: Color-filtered + PSM4 column...', 'info', 'debugLog');
+                    await worker.setParameters({ tessedit_pageseg_mode: '4' });
+                    const r2 = await worker.recognize(processedBlob);
+                    logPreview('S2', r2.data.text.trim());
+                    if (r2.data.text.trim().length > text.length || hasUsefulData(r2.data.text.trim())) {
+                        text = r2.data.text.trim(); data = r2.data;
+                    }
+                }
+
+                // Strategy 3: Original color image (no filter) + no whitelist
+                if (!hasUsefulData(text)) {
+                    log('Strategy 3: Original color + no whitelist...', 'info', 'debugLog');
+                    // Create high-res color version
+                    const canvasColor = document.createElement('canvas');
+                    canvasColor.width = canvas.width;
+                    canvasColor.height = canvas.height;
+                    const ctxC = canvasColor.getContext('2d');
+                    ctxC.imageSmoothingEnabled = true;
+                    ctxC.imageSmoothingQuality = 'high';
+                    ctxC.drawImage(originalImg, 0, 0, canvasColor.width, canvasColor.height);
+                    const colorBlob = await new Promise(r => canvasColor.toBlob(r, 'image/png'));
+                    await worker.setParameters({
+                        tessedit_pageseg_mode: '6',
+                        tessedit_char_whitelist: ''
+                    });
+                    const r3 = await worker.recognize(colorBlob);
+                    logPreview('S3', r3.data.text.trim());
+                    if (r3.data.text.trim().length > text.length || hasUsefulData(r3.data.text.trim())) {
+                        text = r3.data.text.trim(); data = r3.data;
+                    }
+                }
+
+                await worker.terminate();
+
+                // Final result
+                log(`=== ผลลัพธ์: ${data.words.length} คำ, confidence ${data.confidence.toFixed(1)}% ===`, 'info', 'debugLog');
+                logPreview('FINAL', text);
+
+                if (text) {
+                    document.getElementById('ocrResultText').value = text;
+                    document.getElementById('ocrResultContainer').classList.remove('hidden');
+                }
+
+                if (!text) {
+                    log('ไม่พบข้อความ — ลองครอปภาพให้เห็นเฉพาะตาราง หรือใช้ภาพที่ชัดขึ้น', 'error', 'debugLog');
+                    alert('ไม่พบข้อความในรูปภาพครับ\n\nวิธีแก้ไข:\n1. ลองครอป (Crop) ภาพให้เห็นเฉพาะตาราง\n2. ตรวจสอบว่าภาพชัดพอ\n3. ลองถ่าย Screenshot หรือ Zoom ภาพให้ชัดขึ้น');
+                }
+            } catch (err) {
+                console.error('OCR Error:', err);
+                log('เกิดข้อผิดพลาด: ' + err.message, 'error', 'debugLog');
+                alert('เกิดข้อผิดพลาดในการสแกน: ' + err.message);
+            } finally {
+                hideLoading();
+                scanBtn.disabled = false;
+                scanBtn.innerHTML = '<i class="fas fa-magic mr-2"></i> สแกนรูปภาพ';
+                scanBtn.className = 'w-full mt-4 bg-indigo-600 hover:bg-indigo-700 text-white py-3 rounded-lg font-bold shadow transition-all';
+            }
+        }
+
+        function downloadOcrTxt() {
+            const text = document.getElementById('ocrResultText').value;
+            if (!text) return alert('ไม่มีข้อความให้ดาวน์โหลด');
+            const blob = new Blob([text], { type: 'text/plain;charset=utf-8' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `OCR_Result_${new Date().toISOString().slice(0, 10)}.txt`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+
+        function sendOcrToPaste() {
+            const text = document.getElementById('ocrResultText').value;
+            if (!text) return alert('ไม่มีข้อความ');
+            document.getElementById('pasteInput').value = text;
+            switchTab('paste');
+            log('ส่งข้อความ OCR ไปยังช่องก๊อปวางแล้ว', 'success', 'textDebugLog');
+            document.getElementById('textDebugContainer').classList.remove('hidden');
+        }
+
+        // --- EXPORT FUNCTIONS ---
+        function syncInputsToAttributes() {
+            document.querySelectorAll('#printableArea input[type="text"]').forEach(input => {
+                input.setAttribute('value', input.value);
+            });
+        }
+
+        async function downloadPDF() {
+            syncInputsToAttributes();
+            const container = document.createElement('div');
+            try {
+                const originalElement = document.getElementById('printableArea');
+                const clone = originalElement.cloneNode(true);
+                // Force remove margins and shadow so PDF doesn't include it in width calc
+                clone.style.margin = '0';
+                clone.style.boxShadow = 'none';
+                clone.style.transform = 'none';
+
+                const inputs = clone.querySelectorAll('input');
+                inputs.forEach(input => {
+                    const span = document.createElement('span');
+                    span.innerText = input.value;
+                    span.style.fontWeight = 'normal';
+                    span.style.display = 'block';
+                    span.style.textAlign = input.classList.contains('text-center') ? 'center' : 'left';
+                    if (input.parentNode) input.parentNode.replaceChild(span, input);
+                });
+                container.style.position = 'absolute';
+                container.style.top = '0'; container.style.left = '0';
+                container.style.zIndex = '-1000'; container.style.opacity = '0';
+                container.appendChild(clone);
+                document.body.appendChild(container);
+
+                const opt = {
+                    margin: [0, 0, 0, 0], // Top, Left, Bottom, Right
+                    filename: `ใบเบิกโอที_TPN_${document.getElementById('targetMonth').value}.pdf`,
+                    image: { type: 'jpeg', quality: 0.98 },
+                    html2canvas: { scale: 2, useCORS: true, logging: false, scrollY: 0, windowWidth: 794 },
+                    jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+                };
+                await html2pdf().set(opt).from(clone).save();
+            } catch (e) {
+                console.error("Error preparing PDF", e);
+                alert("เกิดข้อผิดพลาดในการสร้าง PDF: " + e.message);
+            } finally {
+                if (document.body.contains(container)) document.body.removeChild(container);
+            }
+        }
+
+        function downloadExcel() {
+            try {
+                syncInputsToAttributes();
+                const monthText = document.getElementById('formMonthLabel').innerText;
+                const tbody = document.getElementById('formTableBody').innerHTML;
+                let logoHtml = '<td colspan="9" class="no-border" style="font-size:20pt; font-weight:bold; font-style:italic;"></td>';
+                const imgEl = document.getElementById('tpnLogo');
+                if (!imgEl.classList.contains('hidden') && imgEl.src) {
+                    logoHtml = `<td colspan="9" class="no-border" style="text-align:left;"><img src="${imgEl.src}" height="60"></td>`;
+                }
+
+                let tableHtml = `
+                    \x3Chtml xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40"\x3E
+                    \x3Chead\x3E
+                        <meta http-equiv="content-type" content="application/vnd.ms-excel; charset=UTF-8">
+                        <style>
+                            @page { mso-page-orientation: portrait; size: 21cm 29.7cm; margin: 1cm; }
+                            table { border-collapse: collapse; width: 100%; font-family: 'Sarabun', sans-serif; }
+                            th, td { border: 1px solid black; padding: 5px; text-align: center; }
+                            .no-border { border: none !important; }
+                            .header { font-size: 14pt; font-weight: bold; }
+                            .cell-border { border: 1px solid #000000 !important; }
+                        </style>
+                    \x3C/head\x3E
+                    \x3Cbody\x3E
+                        <table>
+                            <tr>${logoHtml}</tr>
+                            <tr><td colspan="10" class="no-border" style="text-align:center; font-size:14pt; font-weight:bold;">ใบขออนุมัติทำงานล่วงเวลา/ทำงานในวันหยุด</td></tr>
+                            <tr><td colspan="10" class="no-border" style="text-align:center; font-size:12pt; font-weight:bold;">ฝ่ายปฏิบัติการคลังน้ำมันขอนแก่น</td></tr>
+                            <tr><td colspan="10" class="no-border" style="text-align:center;">ประจำเดือน ${monthText}</td></tr>
+                            <tr><td colspan="10" class="no-border">&nbsp;</td></tr>
+                            <thead>
+                                <tr>
+                                    <th rowspan="2" class="cell-border">ลำดับที่</th>
+                                    <th rowspan="2" class="cell-border">ชื่อ - นามสกุล</th>
+                                    <th rowspan="2" class="cell-border">วันที่ขออนุมัติทำงานล่วงเวลา</th>
+                                    <th colspan="2" class="cell-border">เวลาที่ทำงานล่วงเวลา</th>
+                                    <th rowspan="2" class="cell-border">งานที่ได้รับปฏิบัติ</th>
+                                    <th colspan="3" class="cell-border">จำนวนชั่วโมงที่ใช้ทำงานล่วงเวลา</th>
+                                    <th rowspan="2" class="cell-border">ลงชื่อผู้ปฏิบัติงาน</th>
+                                </tr>
+                                <tr><th class="cell-border">IN</th><th class="cell-border">OUT</th><th class="cell-border">1 เท่า</th><th class="cell-border">1.5 เท่า</th><th class="cell-border">3 เท่า</th></tr>
+                            </thead>
+                            <tbody>
+                                ${tbody.replace(/<td/g, '<td class="cell-border"').replace(/<td style="text-align:center;">/g, '<td class="cell-border" style="text-align:center;">')}
+                            </tbody>
+                            <tfoot>
+                                <tr>
+                                    <td colspan="6" class="cell-border" style="text-align:right; font-weight:bold;">รวมจำนวนชั่วโมง</td>
+                                    <td class="cell-border">${document.getElementById('sum1').innerText}</td>
+                                    <td class="cell-border">${document.getElementById('sum15').innerText}</td>
+                                    <td class="cell-border">${document.getElementById('sum3').innerText}</td>
+                                    <td class="cell-border"></td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                        <br><br>
+                        <table style="border:none;">
+                            <tr>
+                                <td colspan="5" class="no-border" style="text-align:center;">ลงชื่อ................................................ ผู้ขอ</td>
+                                <td class="no-border"></td>
+                                <td colspan="5" class="no-border" style="text-align:center;">ลงชื่อ................................................ ผู้อนุมัติ</td>
+                            </tr>
+                            <tr>
+                                <td colspan="5" class="no-border" style="text-align:center;">( นายนิมิต กาญจนภูวดล )</td>
+                                <td class="no-border"></td>
+                                <td colspan="5" class="no-border" style="text-align:center;">( นายชาญชัย มาศวิเชียร )</td>
+                            </tr>
+                            <tr>
+                                <td colspan="5" class="no-border" style="text-align:center;">ผู้จัดการแผนก/หัวหน้าส่วนงาน</td>
+                                <td class="no-border"></td>
+                                <td colspan="5" class="no-border" style="text-align:center;">ผู้จัดการฝ่าย/ผู้บริหารระดับสูงกว่า</td>
+                            </tr>
+                            <tr>
+                                <td colspan="5" class="no-border" style="text-align:center;">วันที่ ........../........../..........</td>
+                                <td class="no-border"></td>
+                                <td colspan="5" class="no-border" style="text-align:center;">วันที่ ........../........../..........</td>
+                            </tr>
+                        </table>
+                    \x3C/body\x3E\x3C/html\x3E`;
+                tableHtml = tableHtml.replace(/<input[^>]*value="([^"]*)"[^>]*>/g, "$1");
+                const blob = new Blob([tableHtml], { type: 'application/vnd.ms-excel' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `OT_Form_TPN_${document.getElementById('targetMonth').value}.xls`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+            } catch (e) { alert("เกิดข้อผิดพลาดในการสร้าง Excel: " + e.message); }
+        }
+
+        // --- OPEN MODAL (DIRECT CALC) ---
+        function openFormModal() {
+            try {
+                const m = document.getElementById('targetMonth').value;
+                document.getElementById('formMonthLabel').innerText = moment(m).locale('th').format('MMMM YYYY');
+
+                if (globalExtractedName) document.getElementById('formName').value = globalExtractedName;
+
+                const tbody = document.getElementById('formTableBody');
+                tbody.innerHTML = '';
+
+                let i = 1, sum1 = 0, sum15 = 0;
+                const [year, month] = m.split('-');
+                const days = new Date(year, month, 0).getDate();
+
+                for (let d = 1; d <= days; d++) {
+                    const dateStr = `${year}-${month}-${String(d).padStart(2, '0')}`;
+
+                    const inEl = document.getElementById(`in-${dateStr}`);
+                    const outEl = document.getElementById(`out-${dateStr}`);
+                    const holEl = document.getElementById(`holiday-${dateStr}`);
+
+                    const inTime = inEl?.value;
+                    const outTime = outEl?.value;
+                    const isHol = holEl?.checked;
+
+                    // CALCULATE FRESH
+                    const shift = getShift(dateStr);
+                    const stats = calculateDailyStats(dateStr, inTime, outTime, isHol, shift.type);
+
+                    if (stats.ot15 > 0 || stats.ot1 > 0) {
+                        const thDate = moment(dateStr).format('DD/MM/') + (parseInt(year) + 543);
+                        const cleanNote = (stats.note && stats.note !== '-' && stats.note !== 'ปกติ') ? stats.note : 'ปฏิบัติงานคลังน้ำมัน';
+
+                        const tr = `<tr>
+                            <td style="text-align:center;">${i++}</td>
+                            <td style="text-align:center; font-size: 9pt;">${document.getElementById('formName').value}</td>
+                            <td style="text-align:center;">${thDate}</td>
+                            <td style="text-align:center;">${inTime || '-'}</td>
+                            <td style="text-align:center;">${outTime || '-'}</td>
+                            <td style="text-align:center;"><input class="w-full text-center outline-none bg-transparent" value="${cleanNote}" style="border:none; width:100%;"></td>
+                            <td style="text-align:center;">${stats.ot1 || '-'}</td>
+                            <td style="text-align:center;">${stats.ot15 || '-'}</td>
+                            <td style="text-align:center;">-</td>
+                            <td style="text-align:center; font-size: 8pt;"></td>
+                        </tr>`;
+                        tbody.insertAdjacentHTML('beforeend', tr);
+                        sum1 += stats.ot1;
+                        sum15 += stats.ot15;
+                    }
+                }
+
+                while (i <= 15) {
+                    tbody.insertAdjacentHTML('beforeend', `<tr><td style="text-align:center;">${i++}</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>`);
+                }
+
+
+                document.getElementById('sum1').innerText = sum1;
+                document.getElementById('sum15').innerText = sum15;
+                document.getElementById('sum3').innerText = 0;
+
+                document.getElementById('formModal').classList.remove('hidden');
+            } catch (e) { console.error(e); alert("เกิดข้อผิดพลาดในการเปิดฟอร์ม: " + e.message); }
+        }
+
+        function closeFormModal() { document.getElementById('formModal').classList.add('hidden'); }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            document.getElementById('btnUpdateTable').addEventListener('click', updateTableBtn);
+            ['targetMonth', 'refShift'].forEach(id => document.getElementById(id).addEventListener('change', generateTable));
+
+            // Sync form name changes dynamically to the table rows
+            document.getElementById('formName').addEventListener('input', (e) => {
+                const nameVal = e.target.value;
+                document.querySelectorAll('#formTableBody tr').forEach(tr => {
+                    if (tr.cells.length > 8 && tr.cells[1].innerText.trim() !== '') {
+                        tr.cells[1].innerText = nameVal;
+                        tr.cells[9].innerText = nameVal; // FIXED: column 9 is the signature column
+                    }
+                });
+            });
+
+            generateTable();
+        });
+    </script>
+
+    <!-- UI Enhancement Script (no logic changes) -->
+    <script>
+        window.addEventListener('scroll', () => {
+            const btn = document.getElementById('scrollTop');
+            if (btn) btn.classList.toggle('visible', window.scrollY > 300);
+        });
+        document.addEventListener('mousemove', (e) => {
+            document.body.style.setProperty('--mouse-x', e.clientX + 'px');
+            document.body.style.setProperty('--mouse-y', e.clientY + 'px');
+        });
+    </script>
+
+    <!-- New Camera Feature Appended (Added natively without modifying original UI nodes) -->
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // 1. Rename existing 'Send to Paste' button to 'Auto-Fill' to match user intent
+            const pasteBtnText = document.querySelector('button[onclick="sendOcrToPaste()"] .text_button');
+            if(pasteBtnText) {
+                pasteBtnText.innerHTML = "กรอกข้อมูลลงตารางอัตโนมัติ";
+            }
+            
+            // 2. Add Camera UI to the scan tab securely
+            const scanTab = document.getElementById('content-scan');
+            if(scanTab) {
+                const cameraUI = document.createElement('div');
+                cameraUI.className = 'mb-6';
+                cameraUI.innerHTML = `
+                    <div id="cameraSection" class="border-2 border-teal-700/60 rounded-xl p-5 text-center bg-slate-800/80 shadow-inner">
+                        <button id="startCameraBtn" class="btn-spark py-3 px-4 rounded-xl shadow-lg transition-all w-full">
+                            <div class="dots_border"></div>
+                            <i class="fas fa-camera sparkle-icon text-xl mr-1"></i>
+                            <span class="text_button text-sm tracking-wide">เปิดกล้องถ่ายภาพเอกสาร / ใบเบิก</span>
+                        </button>
+                        <div id="videoContainer" class="hidden relative mt-2 animate-in">
+                            <video id="cameraVideo" autoplay playsinline class="w-full max-h-72 object-cover rounded-xl border-2 border-teal-500 mb-4 shadow-lg"></video>
+                            <canvas id="cameraCanvas" class="hidden"></canvas>
+                            <div class="flex gap-3">
+                                <button id="captureCameraBtn" class="flex-1 bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-500 hover:to-rose-500 text-white font-bold py-3 px-4 rounded-xl shadow-lg transition-transform active:scale-95 flex items-center justify-center gap-2 border border-red-400/30">
+                                    <div class="w-4 h-4 rounded-full bg-white animate-pulse shadow-[0_0_10px_white]"></div> ถ่ายรูป
+                                </button>
+                                <button id="closeCameraBtn" class="bg-slate-700 hover:bg-slate-600 text-white py-3 px-5 rounded-xl shadow-lg transition-colors border border-slate-500/30">
+                                    <i class="fas fa-times"></i> ปิดกล้อง
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                // Insert right at the top of the scan tab
+                scanTab.insertBefore(cameraUI, scanTab.firstChild);
+
+                // 3. Camera Logic Execution
+                let stream = null;
+                const video = document.getElementById('cameraVideo');
+                const canvas = document.getElementById('cameraCanvas');
+                
+                document.getElementById('startCameraBtn').addEventListener('click', async () => {
+                    try {
+                        stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
+                        video.srcObject = stream;
+                        document.getElementById('videoContainer').classList.remove('hidden');
+                        document.getElementById('startCameraBtn').classList.add('hidden');
+                    } catch(err) {
+                        alert("ไม่สามารถเปิดกล้องได้ กรุณาตรวจสอบสิทธิ์การเข้าถึงกล้องของคุณ\\n" + err.message);
+                    }
+                });
+
+                document.getElementById('closeCameraBtn').addEventListener('click', () => {
+                    if(stream) stream.getTracks().forEach(t => t.stop());
+                    document.getElementById('videoContainer').classList.add('hidden');
+                    document.getElementById('startCameraBtn').classList.remove('hidden');
+                });
+
+                document.getElementById('captureCameraBtn').addEventListener('click', () => {
+                    canvas.width = video.videoWidth;
+                    canvas.height = video.videoHeight;
+                    canvas.getContext('2d').drawImage(video, 0, 0);
+                    
+                    canvas.toBlob((blob) => {
+                        const file = new File([blob], "camera_capture.jpg", { type: "image/jpeg" });
+                        
+                        // Assign to existing global variable for startOCR()
+                        window.uploadedImageFile = file;
+                        const preview = document.getElementById('imagePreview');
+                        preview.src = URL.createObjectURL(file);
+                        document.getElementById('imagePreviewContainer').classList.remove('hidden');
+                        
+                        const scanBtn = document.getElementById('scanBtn');
+                        scanBtn.disabled = false;
+                        scanBtn.className = 'w-full mt-4 btn-spark py-3 rounded-xl shadow-lg transition-all';
+                        
+                        if(typeof window.log === 'function') window.log('ถ่ายรูปสำเร็จ: พร้อมให้ AI สแกนข้อความ', 'success', 'debugLog');
+                        
+                        // Stop camera automatically after capture
+                        document.getElementById('closeCameraBtn').click();
+                    }, 'image/jpeg', 0.95);
+                });
+            }
+        });
+
+        // 4. Added missing updateLogo function to fix custom logo uploader
+        function updateLogo(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const logo1 = document.getElementById('tpnLogo');
+                    const logo2 = document.getElementById('tpnLogoMobile');
+                    const textLogo = document.getElementById('tpnTextLogo');
+                    
+                    if(logo1) { 
+                        logo1.src = e.target.result; 
+                        logo1.style.display = 'block'; 
+                    }
+                    if(logo2) { 
+                        logo2.src = e.target.result; 
+                        logo2.style.display = 'block'; 
+                    }
+                    if(textLogo) textLogo.classList.add('hidden');
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+    </script>
+</body>
+
+</html>
